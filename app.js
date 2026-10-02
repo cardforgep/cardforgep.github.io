@@ -1,0 +1,1048 @@
+(() => {
+  const cfg = window.CARDFORGE_CONFIG || {};
+  const API = String(cfg.API_BASE_URL || "").replace(/\/$/, "");
+  const TOKEN_KEY = "cardforge_local_token";
+  const VISITOR_KEY = "cardforge_visitor_id";
+
+  const $ = (id) => document.getElementById(id);
+  const form = $("generatorForm");
+  const fileInput = $("product");
+  const dropzone = $("dropzone");
+  const preview = $("uploadPreview");
+  const uploadEmpty = $("uploadEmpty");
+  const replacePhoto = $("replacePhoto");
+  const errorBox = $("errorBox");
+  const apiState = $("apiState");
+  const generateBtn = $("generateBtn");
+  const resultStage = $("resultStage");
+  const resultPlaceholder = $("resultPlaceholder");
+  const resultImage = $("resultImage");
+  const loadingOverlay = $("loadingOverlay");
+  const downloadBtn = $("downloadBtn");
+  const againBtn = $("againBtn");
+  const meta = $("meta");
+  const postGeneratePaywall = $("postGeneratePaywall");
+  const sceneHint = $("sceneHint");
+
+  const loginBtn = $("loginBtn");
+  const userActions = $("userActions");
+  const creditsCount = $("creditsCount");
+  const logoutBtn = $("logoutBtn");
+  const buyCreditsBtn = $("buyCreditsBtn");
+  const balanceBtn = $("balanceBtn");
+  const paywallBuyBtn = $("paywallBuyBtn");
+  const authModal = $("authModal");
+  const billingModal = $("billingModal");
+  const feedbackModal = $("feedbackModal");
+  const legalModal = $("legalModal");
+  const siteToast = $("siteToast");
+
+  const categoryGrid = $("categoryGrid");
+  const sceneGrid = $("sceneGrid");
+
+  let previewUrl = "";
+  let lastImage = "";
+  let sessionToken = localStorage.getItem(TOKEN_KEY) || "";
+  let visitorId = localStorage.getItem(VISITOR_KEY) || "";
+  if (!visitorId) {
+    visitorId = globalThis.crypto?.randomUUID?.() || `v_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+    localStorage.setItem(VISITOR_KEY, visitorId);
+  }
+  let account = null;
+  let authMode = "login";
+  let toastTimer = null;
+  let selectedCategory = "home";
+  let selectedScene = "catalog";
+  let pendingGenerateAfterAuth = false;
+  let pendingGenerationKey = "";
+  let authSource = "header";
+
+  const categories = [
+    { id: "home", label: "Дом", hint: "посуда, декор, интерьер", image: "./assets/products/home.png" },
+    { id: "electronics", label: "Электроника", hint: "гаджеты, наушники, аксессуары", image: "./assets/products/electronics.png" },
+    { id: "beauty", label: "Косметика", hint: "кремы, духи, beauty-товары", image: "./assets/products/beauty.png" },
+    { id: "fashion", label: "Мода", hint: "одежда, обувь, аксессуары", image: "./assets/products/fashion.png" },
+    { id: "food", label: "Еда", hint: "напитки, снеки, упаковка", image: "./assets/products/food.png" },
+    { id: "other", label: "Другое", hint: "универсальная категория", image: "./assets/products/other.png" }
+  ];
+
+  const concepts = {
+    catalog: {
+      label: "Для каталога",
+      subtitle: "чистый фон, акцент на товаре",
+      hint: "Чистая каталожная подача: товар крупно, понятный фон, минимум отвлекающих деталей."
+    },
+    context: {
+      label: "В окружении",
+      subtitle: "естественная обстановка",
+      hint: "Товар будет помещён в подходящую по назначению реальную сцену."
+    },
+    composition: {
+      label: "Композиция",
+      subtitle: "реквизит, атмосфера, стиль",
+      hint: "Рекламная композиция с предметами, светом и окружением, которые усиливают образ товара."
+    },
+    closeup: {
+      label: "Крупный план",
+      subtitle: "детали, фактуры, материалы",
+      hint: "Тот же товар показывается крупно с акцентом на видимые детали, материал и фактуру."
+    },
+    infographic: {
+      label: "Инфографика",
+      subtitle: "заголовок и ваши преимущества",
+      hint: "Карточка с чистыми зонами только для заголовка и преимуществ, которые вы сами ввели."
+    },
+    custom: {
+      label: "Свой стиль",
+      subtitle: "опишите идею своими словами",
+      hint: "Свободный режим: задайте фон, настроение, свет, композицию и визуальную технику. Сам товар останется тем же."
+    }
+  };
+
+  const categoryConceptLabels = {
+    home: { context: "В интерьере" },
+    electronics: { context: "В окружении" },
+    beauty: { context: "В использовании" },
+    fashion: { context: "В образе" },
+    food: { context: "В подаче" },
+    other: { context: "В окружении" }
+  };
+
+  function productImage(categoryId) {
+    return `./assets/products/${categoryId}.png`;
+  }
+
+  function conceptResultImage(categoryId, conceptId) {
+    return `./assets/concept-results/${categoryId}-${conceptId}.webp`;
+  }
+
+  function conceptCardImage(categoryId, conceptId) {
+    return `./assets/concept-cards/${categoryId}-${conceptId}.webp`;
+  }
+
+  const categoryIcons = {
+    home: "⌂",
+    electronics: "◉",
+    beauty: "✦",
+    fashion: "◇",
+    food: "○",
+    other: "□"
+  };
+
+  const conceptIcons = {
+    catalog: "▦",
+    context: "⌂",
+    composition: "✦",
+    closeup: "⌕",
+    infographic: "▥",
+    custom: "◌"
+  };
+
+  function sceneArtwork(categoryId, conceptId, label) {
+    return `<span class="scene-icon" aria-hidden="true">${conceptIcons[conceptId] || "✦"}</span>`;
+  }
+
+
+  function renderCategories() {
+    categoryGrid.innerHTML = "";
+    categories.forEach((item) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = `category-card${item.id === selectedCategory ? " active" : ""}`;
+      button.setAttribute("role", "radio");
+      button.setAttribute("aria-checked", item.id === selectedCategory ? "true" : "false");
+      button.innerHTML = `
+        <span class="category-icon" aria-hidden="true">${categoryIcons[item.id] || "□"}</span>
+        <span><b>${item.label}</b><small>${item.hint}</small></span>
+      `;
+      button.addEventListener("click", () => {
+        selectedCategory = item.id;
+        renderCategories();
+        renderScenes();
+        trackEvent("category_select", { category: selectedCategory });
+      });
+      categoryGrid.appendChild(button);
+    });
+  }
+
+  function renderScenes() {
+    sceneGrid.innerHTML = "";
+    Object.entries(concepts).forEach(([id, concept]) => {
+      const label = categoryConceptLabels[selectedCategory]?.[id] || concept.label;
+      const button = document.createElement("button");
+      button.type = "button";
+      button.dataset.scene = id;
+      button.dataset.category = selectedCategory;
+      button.className = `scene-card${id === selectedScene ? " active" : ""}`;
+      button.setAttribute("role", "radio");
+      button.setAttribute("aria-checked", id === selectedScene ? "true" : "false");
+      button.innerHTML = `
+        ${sceneArtwork(selectedCategory, id, label)}
+        <span class="scene-copy"><b>${label}</b><small>${concept.subtitle}</small></span>
+      `;
+      button.addEventListener("click", () => {
+        selectedScene = id;
+        renderScenes();
+        updateCustomStyleField();
+        trackEvent("scene_select", { category: selectedCategory, scene: selectedScene });
+      });
+      sceneGrid.appendChild(button);
+    });
+    sceneHint.textContent = concepts[selectedScene]?.hint || "CardForge сам подготовит профессиональное задание для выбранной концепции.";
+  }
+
+  function updateCustomStyleField() {
+    const label = document.querySelector("[data-notes-label]");
+    const notes = $("notes");
+    if (!label || !notes) return;
+    const custom = selectedScene === "custom";
+    label.textContent = custom ? "Свободный стиль" : "Дополнительные пожелания";
+    notes.placeholder = custom
+      ? "Опишите свою идею: фон, настроение, цвета, свет и композицию. Например: летняя сцена у бассейна, яркие голубые и жёлтые оттенки, товар крупно в центре."
+      : "Например: больше воздуха справа, тёплый свет, крупный заголовок.";
+    notes.closest(".field-block")?.classList.toggle("custom-style-active", custom);
+  }
+
+  async function trackEvent(eventName, metadata = {}) {
+    if (!API) return;
+    try {
+      const headers = { "Content-Type": "application/json" };
+      if (sessionToken) headers.Authorization = `Bearer ${sessionToken}`;
+      await fetch(`${API}/api/events`, {
+        method: "POST",
+        headers,
+        keepalive: true,
+        body: JSON.stringify({ eventName, visitorId, ...metadata }),
+      });
+    } catch {}
+  }
+
+  async function sendPresence() {
+    if (!API || document.hidden) return;
+    try {
+      const headers = { "Content-Type": "application/json" };
+      if (sessionToken) headers.Authorization = `Bearer ${sessionToken}`;
+      await fetch(`${API}/api/presence`, {
+        method: "POST",
+        headers,
+        keepalive: true,
+        body: JSON.stringify({ visitorId }),
+      });
+    } catch {}
+  }
+
+  function initPresence() {
+    sendPresence();
+    setInterval(() => sendPresence(), 45000);
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden) sendPresence();
+    });
+    window.addEventListener("focus", () => sendPresence());
+  }
+
+  function showError(message) {
+    errorBox.textContent = message || "";
+    errorBox.hidden = !message;
+  }
+
+  function showToast(message, type = "") {
+    if (!siteToast) return;
+    siteToast.textContent = message;
+    siteToast.className = `site-toast ${type}`.trim();
+    siteToast.hidden = false;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { siteToast.hidden = true; }, 6500);
+  }
+
+  let modalScrollY = 0;
+
+  function syncModalPageLock() {
+    const anyOpen = Array.from(document.querySelectorAll(".modal")).some((item) => !item.hidden);
+    const locked = document.body.classList.contains("modal-open");
+    if (anyOpen && !locked) {
+      modalScrollY = window.scrollY || document.documentElement.scrollTop || 0;
+      document.documentElement.classList.add("modal-open");
+      document.body.classList.add("modal-open");
+      document.body.style.top = `-${modalScrollY}px`;
+    } else if (!anyOpen && locked) {
+      document.documentElement.classList.remove("modal-open");
+      document.body.classList.remove("modal-open");
+      document.body.style.top = "";
+      window.scrollTo(0, modalScrollY);
+    }
+  }
+
+  function setModal(modal, open) {
+    if (!modal) return;
+    modal.hidden = !open;
+    if (open) {
+      modal.scrollTop = 0;
+      const card = modal.querySelector(".modal-card");
+      if (card) card.scrollTop = 0;
+    }
+    syncModalPageLock();
+  }
+
+  function setAuthMode(mode) {
+    authMode = mode === "register" ? "register" : "login";
+    document.querySelectorAll("[data-auth-mode]").forEach((button) => {
+      button.classList.toggle("active", button.dataset.authMode === authMode);
+    });
+    $("authTitle").textContent = authMode === "register" ? "Создать аккаунт" : "Войти в CardForge";
+    $("authLead").textContent = authMode === "register"
+      ? "Регистрация занимает несколько секунд. Новый аккаунт получает 1 бесплатную генерацию."
+      : "Введите email и пароль. Письма и сторонние сервисы для входа не нужны.";
+    $("authSubmitBtn").textContent = authMode === "register" ? "Создать аккаунт" : "Войти";
+    $("confirmField").hidden = authMode !== "register";
+    const termsRow = $("authTermsRow");
+    if (termsRow) termsRow.hidden = authMode !== "register";
+    $("authMessage").hidden = true;
+  }
+
+  function openAuth(mode = "login", source = "header") {
+    authSource = source;
+    setAuthMode(mode);
+    if (source === "generation") {
+      $("authLead").textContent = "Перед первой генерацией создайте аккаунт. Бесплатный запуск резервируется только в момент генерации — это защищает сервис от накруток.";
+    }
+    setModal(authModal, true);
+    trackEvent("auth_open", { source });
+    setTimeout(() => $("authEmail")?.focus(), 50);
+  }
+  function closeAuth() {
+    pendingGenerateAfterAuth = false;
+    setModal(authModal, false);
+  }
+  function openBilling() {
+    if (!sessionToken) return openAuth("login", "billing");
+    const billingCredits = $("billingCredits");
+    if (billingCredits) billingCredits.textContent = String(Number(account?.credits || 0));
+    const terms = $("billingTerms");
+    if (terms) terms.checked = false;
+    setModal(billingModal, true);
+    trackEvent("billing_open", { source: "balance" });
+    loadPackages();
+  }
+  function closeBilling() { setModal(billingModal, false); }
+
+  function setLegalTab(tab = "terms") {
+    const active = tab === "privacy" ? "privacy" : "terms";
+    document.querySelectorAll("[data-legal-tab]").forEach((button) => button.classList.toggle("active", button.dataset.legalTab === active));
+    if ($("legalTerms")) $("legalTerms").hidden = active !== "terms";
+    if ($("legalPrivacy")) $("legalPrivacy").hidden = active !== "privacy";
+  }
+
+  function openLegal(tab = "terms") {
+    setLegalTab(tab);
+    setModal(legalModal, true);
+    trackEvent("legal_open", { source: tab });
+  }
+  function closeLegal() { setModal(legalModal, false); }
+
+  function openFeedback(source = "footer") {
+    const email = $("feedbackEmail");
+    if (email && !email.value) email.value = account?.email || "";
+    const status = $("feedbackStatus");
+    if (status) status.hidden = true;
+    setModal(feedbackModal, true);
+    trackEvent("feedback_open", { source });
+    setTimeout(() => $("feedbackMessage")?.focus(), 50);
+  }
+  function closeFeedback() { setModal(feedbackModal, false); }
+
+  document.querySelectorAll("[data-close-modal='auth']").forEach((el) => el.addEventListener("click", closeAuth));
+  document.querySelectorAll("[data-close-modal='billing']").forEach((el) => el.addEventListener("click", closeBilling));
+  document.querySelectorAll("[data-close-modal='feedback']").forEach((el) => el.addEventListener("click", closeFeedback));
+  document.querySelectorAll("[data-close-modal='legal']").forEach((el) => el.addEventListener("click", closeLegal));
+  document.querySelectorAll("[data-auth-mode]").forEach((el) => el.addEventListener("click", () => setAuthMode(el.dataset.authMode)));
+  document.querySelectorAll("[data-open-legal]").forEach((el) => el.addEventListener("click", () => openLegal(el.dataset.openLegal || "terms")));
+  document.querySelectorAll("[data-legal-tab]").forEach((el) => el.addEventListener("click", () => setLegalTab(el.dataset.legalTab)));
+  document.querySelectorAll("[data-open-feedback]").forEach((el) => el.addEventListener("click", () => openFeedback("footer")));
+  $("navFeedbackBtn")?.addEventListener("click", () => openFeedback("navigation"));
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") { closeAuth(); closeBilling(); closeFeedback(); closeLegal(); }
+  });
+
+  function setFile(file) {
+    if (!file) return;
+    if (!/^image\/(jpeg|png|webp)$/.test(file.type)) return showError("Поддерживаются JPG, PNG и WEBP.");
+    if (file.size > 12 * 1024 * 1024) return showError("Максимальный размер файла — 12 МБ.");
+    showError("");
+    const dt = new DataTransfer();
+    dt.items.add(file);
+    fileInput.files = dt.files;
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    previewUrl = URL.createObjectURL(file);
+    preview.src = previewUrl;
+    preview.hidden = false;
+    uploadEmpty.hidden = true;
+    replacePhoto.hidden = false;
+  }
+
+  fileInput.addEventListener("change", () => setFile(fileInput.files?.[0]));
+  replacePhoto.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); fileInput.click(); });
+  dropzone.addEventListener("dragover", (e) => { e.preventDefault(); dropzone.classList.add("drag"); });
+  dropzone.addEventListener("dragleave", () => dropzone.classList.remove("drag"));
+  dropzone.addEventListener("drop", (e) => { e.preventDefault(); dropzone.classList.remove("drag"); setFile(e.dataTransfer.files?.[0]); });
+
+  $("size").addEventListener("change", () => {
+    resultStage.classList.remove("portrait", "square", "story");
+    resultStage.classList.add($("size").value);
+  });
+
+  async function checkApi() {
+    if (!API) {
+      apiState.classList.add("bad");
+      apiState.querySelector("span").textContent = "Сервис не настроен";
+      return;
+    }
+    try {
+      const res = await fetch(`${API}/api/health`, { cache: "no-store" });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      if (!data.generatorReady) throw new Error("generator not ready");
+      apiState.classList.remove("bad");
+      apiState.classList.add("ok");
+      apiState.querySelector("span").textContent = "Сервис готов";
+    } catch {
+      apiState.classList.remove("ok");
+      apiState.classList.add("bad");
+      apiState.querySelector("span").textContent = "Сервис недоступен";
+    }
+  }
+
+  function saveSession(token) {
+    sessionToken = String(token || "");
+    if (sessionToken) localStorage.setItem(TOKEN_KEY, sessionToken);
+    else localStorage.removeItem(TOKEN_KEY);
+    sendPresence();
+  }
+
+  async function apiFetch(path, options = {}, auth = false) {
+    const headers = new Headers(options.headers || {});
+    if (auth) {
+      if (!sessionToken) throw Object.assign(new Error("Войдите в аккаунт"), { code: "AUTH_REQUIRED" });
+      headers.set("Authorization", `Bearer ${sessionToken}`);
+    }
+    return fetch(`${API}${path}`, { ...options, headers });
+  }
+
+  function accountAvailable() {
+    if (!account) return 0;
+    if (Number.isFinite(Number(account.availableGenerations))) return Number(account.availableGenerations);
+    return Number(account.credits || 0) + (account.freeTrialAvailable ? 1 : 0);
+  }
+
+  function updateGenerateButton() {
+    if (!generateBtn || generateBtn.disabled) return;
+    if (!sessionToken || account?.freeTrialAvailable) {
+      generateBtn.innerHTML = "<span>✦</span> Сгенерировать бесплатно";
+    } else {
+      generateBtn.innerHTML = "<span>✦</span> Сгенерировать · 1 кредит";
+    }
+  }
+
+  function renderAccount() {
+    if (sessionToken && account) {
+      loginBtn.hidden = true;
+      userActions.hidden = false;
+      const credits = Number(account.credits || 0);
+      creditsCount.textContent = account.freeTrialAvailable && credits === 0 ? "1 бесплатно" : String(credits);
+      if ($("billingCredits")) $("billingCredits").textContent = String(credits);
+    } else {
+      loginBtn.hidden = false;
+      userActions.hidden = true;
+      creditsCount.textContent = "0";
+      postGeneratePaywall.hidden = true;
+    }
+    updateGenerateButton();
+  }
+
+  async function refreshAccount() {
+    if (!sessionToken) {
+      account = null;
+      renderAccount();
+      return null;
+    }
+    try {
+      const res = await apiFetch("/api/me", { cache: "no-store" }, true);
+      const data = await res.json().catch(() => ({}));
+      if (res.status === 401) {
+        saveSession("");
+        account = null;
+        renderAccount();
+        return null;
+      }
+      if (!res.ok) throw new Error(data.error || "Не удалось загрузить аккаунт");
+      account = data.user || null;
+      renderAccount();
+      return account;
+    } catch (e) {
+      console.warn(e);
+      return null;
+    }
+  }
+
+  async function submitAuth() {
+    const email = $("authEmail").value.trim();
+    const password = $("authPassword").value;
+    const confirm = $("authPasswordConfirm").value;
+    const msg = $("authMessage");
+    const button = $("authSubmitBtn");
+    msg.hidden = true;
+
+    if (!/^\S+@\S+\.\S+$/.test(email)) {
+      msg.textContent = "Введите корректный email.";
+      msg.className = "auth-message error";
+      msg.hidden = false;
+      return;
+    }
+    if (password.length < 8) {
+      msg.textContent = "Пароль должен содержать минимум 8 символов.";
+      msg.className = "auth-message error";
+      msg.hidden = false;
+      return;
+    }
+    if (authMode === "register" && password !== confirm) {
+      msg.textContent = "Пароли не совпадают.";
+      msg.className = "auth-message error";
+      msg.hidden = false;
+      return;
+    }
+    if (authMode === "register" && !$("authTerms")?.checked) {
+      msg.textContent = "Для регистрации примите пользовательское соглашение.";
+      msg.className = "auth-message error";
+      msg.hidden = false;
+      return;
+    }
+
+    button.disabled = true;
+    button.textContent = authMode === "register" ? "Создаём аккаунт…" : "Входим…";
+    try {
+      const res = await fetch(`${API}/api/auth/${authMode === "register" ? "register" : "login"}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password, visitorId, termsAccepted: authMode === "register" ? Boolean($("authTerms")?.checked) : undefined })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || "Ошибка авторизации");
+      if (!data.token) throw new Error("Сервер не вернул сессию");
+      saveSession(data.token);
+      account = data.user || null;
+      await refreshAccount();
+      const resumeGeneration = pendingGenerateAfterAuth;
+      pendingGenerateAfterAuth = false;
+      setModal(authModal, false);
+      $("authPassword").value = "";
+      $("authPasswordConfirm").value = "";
+      if ($("authTerms")) $("authTerms").checked = false;
+      showToast(authMode === "register" ? "Аккаунт создан. Первая генерация доступна бесплатно." : "Вы вошли в аккаунт.", "good");
+      if (resumeGeneration) setTimeout(() => generate(), 120);
+    } catch (e) {
+      msg.textContent = e?.message || "Ошибка авторизации";
+      msg.className = "auth-message error";
+      msg.hidden = false;
+    } finally {
+      button.disabled = false;
+      button.textContent = authMode === "register" ? "Создать аккаунт" : "Войти";
+    }
+  }
+
+  function initAuth() {
+    loginBtn.addEventListener("click", () => openAuth("login", "header"));
+    $("authSubmitBtn").addEventListener("click", submitAuth);
+    [$("authEmail"), $("authPassword"), $("authPasswordConfirm")].forEach((el) => {
+      el?.addEventListener("keydown", (e) => { if (e.key === "Enter") submitAuth(); });
+    });
+    logoutBtn.addEventListener("click", async () => {
+      try { await apiFetch("/api/auth/logout", { method: "POST" }, true); } catch {}
+      saveSession("");
+      account = null;
+      renderAccount();
+      showToast("Вы вышли из аккаунта");
+    });
+    return refreshAccount();
+  }
+
+  balanceBtn.addEventListener("click", openBilling);
+  buyCreditsBtn.addEventListener("click", openBilling);
+  paywallBuyBtn.addEventListener("click", openBilling);
+
+  function money(amount, currency) {
+    try { return new Intl.NumberFormat("ru-RU", { style: "currency", currency, maximumFractionDigits: 0 }).format(amount); }
+    catch { return `${amount} ${currency}`; }
+  }
+
+  async function loadPackages() {
+    const grid = $("packageGrid");
+    const msg = $("billingMessage");
+    if (!grid || !msg) return;
+    msg.hidden = true;
+    grid.innerHTML = '<div class="packages-loading">Загружаем тарифы…</div>';
+    try {
+      const res = await fetch(`${API}/api/billing/packages`, { cache: "no-store" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Не удалось загрузить пакеты");
+      grid.innerHTML = "";
+      for (const pack of data.packages || []) {
+        const perGeneration = Number(pack.amount) / Math.max(1, Number(pack.credits));
+        const card = document.createElement("article");
+        card.className = `package-card package-card-v2${pack.popular ? " popular" : ""}`;
+        card.innerHTML = `${pack.popular ? '<span class="package-badge">Популярный</span>' : ''}
+          <div class="package-top"><div><small>Пакет</small><h3>${pack.title}</h3></div><span class="package-icon">✦</span></div>
+          <div class="package-credits"><strong>${pack.credits}</strong><span>генераций</span></div>
+          <p class="package-description">${pack.description || "Для создания карточек товаров"}</p>
+          <div class="package-price-row"><div class="package-price">${money(pack.amount, pack.currency)}</div><small>≈ ${money(perGeneration, pack.currency)} / карточка</small></div>
+          <button class="package-buy" type="button">Выбрать пакет <span>→</span></button>`;
+        card.querySelector("button").addEventListener("click", (e) => buyPackage(pack.id, e.currentTarget));
+        grid.appendChild(card);
+      }
+      syncBillingButtons();
+    } catch (e) {
+      grid.innerHTML = '<div class="packages-loading">Не удалось загрузить тарифы.</div>';
+      msg.textContent = e?.message || "Ошибка тарифов";
+      msg.className = "auth-message error";
+      msg.hidden = false;
+    }
+  }
+
+  function syncBillingButtons() {
+    const accepted = Boolean($("billingTerms")?.checked);
+    document.querySelectorAll(".package-buy").forEach((button) => {
+      button.disabled = !accepted;
+      button.title = accepted ? "" : "Сначала примите пользовательское соглашение";
+    });
+  }
+
+  $("billingTerms")?.addEventListener("change", syncBillingButtons);
+
+  async function buyPackage(packageId, button) {
+    const msg = $("billingMessage");
+    msg.hidden = true;
+    if (!$("billingTerms")?.checked) {
+      msg.textContent = "Подтвердите согласие с пользовательским соглашением перед оплатой.";
+      msg.className = "auth-message error";
+      msg.hidden = false;
+      return;
+    }
+    button.disabled = true;
+    button.textContent = "Создаём оплату…";
+    try {
+      const res = await apiFetch("/api/billing/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ packageId, termsAccepted: true })
+      }, true);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Не удалось создать оплату");
+      if (!data.paymentUrl) throw new Error("Платёжная система не вернула ссылку");
+      location.href = data.paymentUrl;
+    } catch (e) {
+      button.disabled = false;
+      button.innerHTML = 'Выбрать пакет <span>→</span>';
+      msg.textContent = e?.message || "Ошибка оплаты";
+      msg.className = "auth-message error";
+      msg.hidden = false;
+    }
+  }
+
+  async function submitFeedback() {
+    const button = $("feedbackSubmit");
+    const status = $("feedbackStatus");
+    const topic = $("feedbackTopic")?.value || "other";
+    const email = $("feedbackEmail")?.value.trim() || "";
+    const message = $("feedbackMessage")?.value.trim() || "";
+    status.hidden = true;
+    if (message.length < 10) {
+      status.textContent = "Напишите чуть подробнее — минимум 10 символов.";
+      status.className = "auth-message error";
+      status.hidden = false;
+      return;
+    }
+    if (email && !/^\S+@\S+\.\S+$/.test(email)) {
+      status.textContent = "Проверьте email для ответа.";
+      status.className = "auth-message error";
+      status.hidden = false;
+      return;
+    }
+    button.disabled = true;
+    button.textContent = "Отправляем…";
+    try {
+      const res = await apiFetch("/api/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ topic, email, message, visitorId })
+      }, Boolean(sessionToken));
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || "Не удалось отправить сообщение");
+      $("feedbackMessage").value = "";
+      $("feedbackCount").textContent = "0";
+      status.textContent = "Спасибо! Сообщение сохранено и появилось в нашей панели поддержки.";
+      status.className = "auth-message success";
+      status.hidden = false;
+      showToast("Сообщение отправлено. Спасибо!", "good");
+    } catch (e) {
+      status.textContent = e?.message || "Не удалось отправить сообщение";
+      status.className = "auth-message error";
+      status.hidden = false;
+    } finally {
+      button.disabled = false;
+      button.textContent = "Отправить сообщение";
+    }
+  }
+
+  $("feedbackSubmit")?.addEventListener("click", submitFeedback);
+  $("feedbackMessage")?.addEventListener("input", (event) => {
+    if ($("feedbackCount")) $("feedbackCount").textContent = String(event.target.value.length);
+  });
+
+  function makeGenerationKey() {
+    return globalThis.crypto?.randomUUID?.() || `gen_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+  }
+
+  function clearPendingGenerationKey() {
+    pendingGenerationKey = "";
+  }
+
+  async function fetchGeneration(body, generationKey) {
+    let lastError = null;
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      try {
+        return await fetch(`${API}/api/generate`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${sessionToken}`,
+            "X-Idempotency-Key": generationKey,
+          },
+          body,
+        });
+      } catch (error) {
+        lastError = error;
+        if (attempt === 0) await new Promise((resolve) => setTimeout(resolve, 1200));
+      }
+    }
+    throw lastError || new Error("Failed to fetch");
+  }
+
+  async function generate() {
+    showError("");
+
+    const file = fileInput.files?.[0];
+    if (!file) return showError("Сначала загрузите фотографию товара.");
+    if (!API) return showError("Сервис генерации не настроен.");
+    if (selectedScene === "custom" && $("notes").value.trim().length < 10) {
+      return showError("Для «Своего стиля» опишите идею хотя бы несколькими словами.");
+    }
+
+    trackEvent("generate_click", { category: selectedCategory, scene: selectedScene });
+
+    if (!sessionToken) {
+      pendingGenerateAfterAuth = true;
+      openAuth("register", "generation");
+      return;
+    }
+
+    if (!account) await refreshAccount();
+    if (!account || accountAvailable() < 1) {
+      showError("Бесплатная генерация уже использована. Для новой карточки пополните баланс.");
+      openBilling();
+      return;
+    }
+
+    const body = new FormData();
+    body.append("product", file);
+    body.append("visitorId", visitorId);
+    body.append("category", selectedCategory);
+    body.append("scene", selectedScene);
+    body.append("prompt", $("notes").value.trim());
+    body.append("title", $("title").value.trim());
+    body.append("features", $("features").value.trim());
+    body.append("size", $("size").value);
+
+    generateBtn.disabled = true;
+    generateBtn.innerHTML = "<span>✦</span> Генерация…";
+    loadingOverlay.hidden = false;
+    resultPlaceholder.hidden = true;
+    resultImage.hidden = true;
+    downloadBtn.disabled = true;
+    againBtn.disabled = true;
+    postGeneratePaywall.hidden = true;
+    meta.textContent = "";
+
+    try {
+      const generationKey = pendingGenerationKey || makeGenerationKey();
+      pendingGenerationKey = generationKey;
+      const res = await fetchGeneration(body, generationKey);
+      const text = await res.text();
+      let data;
+      try { data = JSON.parse(text); } catch { data = { error: text || `HTTP ${res.status}` }; }
+      if (res.status === 401) {
+        clearPendingGenerationKey();
+        saveSession(""); account = null; renderAccount(); pendingGenerateAfterAuth = true; openAuth("login", "generation");
+        const authError = new Error(data.error || "Войдите снова");
+        authError.serverResponse = true;
+        throw authError;
+      }
+      if (res.status === 402 || res.status === 429 || data.code === "NO_CREDITS" || data.code === "TRIAL_LIMIT") {
+        clearPendingGenerationKey();
+        await refreshAccount();
+        openBilling();
+        const creditError = new Error(data.error || "Бесплатная генерация использована. Для продолжения пополните баланс.");
+        creditError.serverResponse = true;
+        throw creditError;
+      }
+      if (!res.ok) {
+        if (data.code !== "GENERATION_IN_PROGRESS") clearPendingGenerationKey();
+        const apiError = new Error(data.error || `Ошибка API ${res.status}`);
+        apiError.serverResponse = true;
+        apiError.code = data.code || null;
+        apiError.creditRefunded = Boolean(data.creditRefunded);
+        throw apiError;
+      }
+      if (!data.image) {
+        clearPendingGenerationKey();
+        const emptyError = new Error("Сервис не вернул изображение");
+        emptyError.serverResponse = true;
+        throw emptyError;
+      }
+
+      clearPendingGenerationKey();
+      lastImage = data.image;
+      resultImage.src = data.image;
+      resultImage.hidden = false;
+      downloadBtn.disabled = false;
+      againBtn.disabled = false;
+      account = {
+        ...(account || {}),
+        credits: Number(data.credits ?? account?.credits ?? 0),
+        freeTrialAvailable: Boolean(data.freeTrialAvailable),
+        availableGenerations: Number(data.availableGenerations ?? 0),
+      };
+      renderAccount();
+      if (data.elapsedMs) {
+        const suffix = data.chargeType === "trial" ? "Бесплатная генерация использована" : `Осталось генераций: ${accountAvailable()}`;
+        meta.textContent = `Готово за ${Math.max(1, Math.round(data.elapsedMs / 1000))} сек. · ${suffix}`;
+      }
+      if (accountAvailable() === 0) postGeneratePaywall.hidden = false;
+    } catch (e) {
+      resultPlaceholder.hidden = false;
+      const isNetworkFailure = !e?.serverResponse && (e instanceof TypeError || /failed to fetch|networkerror|network request failed/i.test(String(e?.message || "")));
+      if (isNetworkFailure) {
+        showError("Связь с сервером прервалась. Нажмите «Создать» ещё раз — CardForge продолжит тот же запрос и второй кредит не спишется.");
+      } else if (e?.code === "GENERATION_IN_PROGRESS") {
+        showError("Генерация ещё выполняется. Нажмите ещё раз через несколько секунд — новый кредит не спишется.");
+      } else {
+        showError(e?.message || "Ошибка генерации");
+      }
+      await refreshAccount();
+    } finally {
+      loadingOverlay.hidden = true;
+      generateBtn.disabled = false;
+      updateGenerateButton();
+    }
+  }
+
+  [fileInput, $("title"), $("features"), $("notes"), $("size")].filter(Boolean).forEach((el) => {
+    el.addEventListener("change", clearPendingGenerationKey);
+    if (el !== fileInput) el.addEventListener("input", clearPendingGenerationKey);
+  });
+
+  categoryGrid?.addEventListener("click", clearPendingGenerationKey);
+  sceneGrid?.addEventListener("click", clearPendingGenerationKey);
+
+  form.addEventListener("submit", (e) => { e.preventDefault(); generate(); });
+  againBtn.addEventListener("click", () => { clearPendingGenerationKey(); generate(); });
+  downloadBtn.addEventListener("click", () => {
+    if (!lastImage) return;
+    const a = document.createElement("a");
+    a.href = lastImage;
+    a.download = `cardforge-${Date.now()}.${lastImage.startsWith("data:image/jpeg") ? "jpg" : "png"}`;
+    document.body.appendChild(a); a.click(); a.remove();
+  });
+
+  function initHeroCarousel() {
+    const viewport = $("heroCarousel");
+    const dotsBox = $("heroCarouselDots");
+    const prev = document.querySelector(".carousel-prev");
+    const next = document.querySelector(".carousel-next");
+    if (!viewport || !dotsBox || !prev || !next) return;
+    const cards = Array.from(viewport.querySelectorAll(".carousel-card"));
+    if (!cards.length) return;
+    let index = 0, timer = null, resumeTimer = null;
+    const dots = cards.map((_, i) => {
+      const dot = document.createElement("button");
+      dot.type = "button"; dot.className = "carousel-dot" + (i === 0 ? " active" : "");
+      dot.setAttribute("aria-label", `Показать пример ${i + 1}`);
+      dot.addEventListener("click", () => goTo(i, true)); dotsBox.appendChild(dot); return dot;
+    });
+    function updateDots() { dots.forEach((dot, i) => dot.classList.toggle("active", i === index)); }
+    function goTo(nextIndex, userAction = false) {
+      index = (nextIndex + cards.length) % cards.length;
+      const left = cards[index].offsetLeft - viewport.firstElementChild.offsetLeft;
+      viewport.scrollTo({ left, behavior: "smooth" }); updateDots(); if (userAction) restartAutoplay();
+    }
+    function nearestIndex() {
+      const x = viewport.scrollLeft; let best = 0, distance = Infinity;
+      cards.forEach((card, i) => { const d = Math.abs(card.offsetLeft - viewport.firstElementChild.offsetLeft - x); if (d < distance) { distance = d; best = i; } });
+      if (best !== index) { index = best; updateDots(); }
+    }
+    function stopAutoplay() { if (timer) clearInterval(timer); timer = null; if (resumeTimer) clearTimeout(resumeTimer); resumeTimer = null; }
+    function startAutoplay() { stopAutoplay(); if (matchMedia("(prefers-reduced-motion: reduce)").matches) return; timer = setInterval(() => goTo(index + 1), 4200); }
+    function restartAutoplay() { stopAutoplay(); resumeTimer = setTimeout(startAutoplay, 6500); }
+    prev.addEventListener("click", () => goTo(index - 1, true)); next.addEventListener("click", () => goTo(index + 1, true));
+    viewport.addEventListener("scroll", () => requestAnimationFrame(nearestIndex), { passive: true });
+    viewport.addEventListener("pointerdown", stopAutoplay, { passive: true }); viewport.addEventListener("pointerup", restartAutoplay, { passive: true });
+    viewport.addEventListener("mouseenter", stopAutoplay); viewport.addEventListener("mouseleave", startAutoplay); viewport.addEventListener("focusin", stopAutoplay); viewport.addEventListener("focusout", startAutoplay);
+    window.addEventListener("resize", () => goTo(index)); startAutoplay();
+  }
+
+
+  async function loadPublicPackages() {
+    const grid = $("publicPackageGrid");
+    if (!grid) return;
+    try {
+      const res = await fetch(`${API}/api/billing/packages`, { cache: "no-store" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Не удалось загрузить тарифы");
+      grid.innerHTML = "";
+      for (const pack of data.packages || []) {
+        const card = document.createElement("article");
+        card.className = `public-package-card${pack.popular ? " popular" : ""}`;
+        card.innerHTML = `${pack.popular ? '<span class="public-package-badge">Популярный</span>' : ''}<span class="public-package-name">${pack.title}</span><div class="public-package-credits">${pack.credits}<small> генераций</small></div><div class="public-package-price">${money(pack.amount, pack.currency)}</div><p>${pack.credits <= 10 ? "Для знакомства и первых карточек" : pack.credits < 100 ? "Для регулярной работы с товарами" : "Для магазина и большого каталога"}</p><button type="button">Выбрать пакет</button>`;
+        card.querySelector("button").addEventListener("click", () => {
+          if (!sessionToken) openAuth("register", "pricing");
+          else openBilling();
+        });
+        grid.appendChild(card);
+      }
+    } catch {
+      grid.innerHTML = '<div class="pricing-loading">Тарифы временно недоступны. Откройте окно покупки после входа.</div>';
+    }
+  }
+
+  function initMobileMenu() {
+    const button = $("mobileMenuBtn");
+    const nav = document.getElementById("mainNav");
+    if (!button || !nav) return;
+    button.addEventListener("click", () => {
+      const open = nav.classList.toggle("open");
+      button.textContent = open ? "×" : "☰";
+      button.setAttribute("aria-expanded", open ? "true" : "false");
+    });
+    nav.querySelectorAll("a").forEach((link) => link.addEventListener("click", () => {
+      nav.classList.remove("open");
+      button.textContent = "☰";
+      button.setAttribute("aria-expanded", "false");
+    }));
+  }
+
+
+
+  function initShowcaseCards() {
+    const rail = $("showcaseRail");
+    const dotsBox = $("showcaseDots");
+    const prev = $("showcasePrev");
+    const next = $("showcaseNext");
+    if (!rail) return;
+    const cards = Array.from(rail.querySelectorAll('.showcase-card'));
+    if (!cards.length) return;
+    let index = Math.max(0, cards.findIndex((card) => card.classList.contains('active')));
+    const dots = cards.map((_, i) => {
+      if (!dotsBox) return null;
+      const dot = document.createElement('button');
+      dot.type = 'button';
+      dot.className = 'showcase-dot' + (i === index ? ' active' : '');
+      dot.setAttribute('aria-label', `Показать пример ${i + 1}`);
+      dot.addEventListener('click', () => activate(i, true));
+      dotsBox.appendChild(dot);
+      return dot;
+    });
+    function sync() {
+      cards.forEach((card, i) => card.classList.toggle('active', i === index));
+      dots.forEach((dot, i) => dot && dot.classList.toggle('active', i === index));
+    }
+    function scrollToCard(i) {
+      if (window.innerWidth <= 980) {
+        cards[i].scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+      }
+    }
+    function activate(i, userAction = false) {
+      index = (i + cards.length) % cards.length;
+      sync();
+      scrollToCard(index);
+      if (userAction) trackEvent('showcase_interaction', { example: index + 1 });
+    }
+    cards.forEach((card, i) => {
+      card.addEventListener('mouseenter', () => { if (window.innerWidth > 980) activate(i); });
+      card.addEventListener('click', () => activate(i, true));
+      card.addEventListener('focus', () => activate(i));
+      card.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); activate(i, true); }
+        if (event.key === 'ArrowRight') { event.preventDefault(); activate(index + 1, true); }
+        if (event.key === 'ArrowLeft') { event.preventDefault(); activate(index - 1, true); }
+      });
+    });
+    prev && prev.addEventListener('click', () => activate(index - 1, true));
+    next && next.addEventListener('click', () => activate(index + 1, true));
+    rail.addEventListener('scroll', () => {
+      if (window.innerWidth > 980) return;
+      const center = rail.scrollLeft + rail.clientWidth / 2;
+      let nearest = index;
+      let best = Infinity;
+      cards.forEach((card, i) => {
+        const cardCenter = card.offsetLeft + card.clientWidth / 2;
+        const dist = Math.abs(cardCenter - center);
+        if (dist < best) { best = dist; nearest = i; }
+      });
+      if (nearest !== index) { index = nearest; sync(); }
+    }, { passive: true });
+    window.addEventListener('resize', () => sync());
+    sync();
+  }
+
+  async function handlePaymentReturn() {
+    const params = new URLSearchParams(location.search);
+    const payment = params.get("payment") || params.get("status");
+    if (!payment) return;
+    history.replaceState({}, "", `${location.pathname}${location.hash || ""}`);
+    if (payment === "success") {
+      showToast("Платёж завершён. Ждём подтверждение Lava.top и обновляем баланс…", "good");
+      for (let i = 0; i < 12; i++) {
+        if (!sessionToken) break;
+        await new Promise((r) => setTimeout(r, i === 0 ? 400 : 2000));
+        await refreshAccount();
+      }
+    } else if (payment === "cancelled") showToast("Оплата отменена.");
+    else if (payment === "failed") showToast("Платёж не прошёл. Попробуйте другой способ оплаты.", "bad");
+  }
+
+  async function boot() {
+    renderCategories();
+    renderScenes();
+    updateCustomStyleField();
+    updateGenerateButton();
+    initHeroCarousel();
+    initMobileMenu();
+    initPresence();
+    initShowcaseCards();
+    trackEvent("page_view", { source: "landing" });
+    const generator = document.getElementById("generator");
+    if (generator && "IntersectionObserver" in window) {
+      let sent = false;
+      const observer = new IntersectionObserver((entries) => {
+        if (!sent && entries.some((entry) => entry.isIntersecting)) {
+          sent = true;
+          trackEvent("generator_view", { source: "scroll" });
+          observer.disconnect();
+        }
+      }, { threshold: 0.2 });
+      observer.observe(generator);
+    }
+    await checkApi();
+    await initAuth();
+    await loadPublicPackages();
+    await handlePaymentReturn();
+  }
+
+  boot();
+})();

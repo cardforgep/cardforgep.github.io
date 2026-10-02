@@ -1,0 +1,300 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#ffffff" />
+  <meta name="description" content="CardForge превращает обычное фото товара в красивую продающую карточку для маркетплейсов, рекламы и соцсетей." />
+  <title>CardForge — фото товара в продающую карточку</title>
+  <link rel="stylesheet" href="./styles.css?v=8111" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="shell topbar-inner">
+      <a class="brand" href="#top" aria-label="CardForge"><span>Card</span><b>Forge</b></a>
+      <nav class="nav" id="mainNav">
+        <a href="#examples">Примеры</a>
+        <a href="#how">Как это работает</a>
+        <a href="#faq">FAQ</a>
+        <button class="nav-feedback" id="navFeedbackBtn" type="button">Написать нам</button>
+      </nav>
+      <div class="account-actions">
+        <button id="loginBtn" class="login-btn" type="button">Войти</button>
+        <div id="userActions" class="user-actions" hidden>
+          <button id="balanceBtn" class="balance-pill" type="button">✦ <span id="creditsCount">0</span></button>
+          <button id="buyCreditsBtn" class="buy-btn" type="button">Кредиты</button>
+          <button id="logoutBtn" class="logout-btn" type="button" aria-label="Выйти">↗</button>
+        </div>
+        <a class="top-cta" href="#generator">Создать карточку <span>→</span></a>
+        <button id="mobileMenuBtn" class="mobile-menu-btn" type="button" aria-label="Открыть меню">☰</button>
+      </div>
+    </div>
+  </header>
+
+  <main id="top">
+    <section class="hero shell">
+      <div class="hero-copy">
+        <span class="eyebrow">✦ AI для карточек товаров</span>
+        <h1>Одно фото товара —<br><em>и готова красивая продающая карточка</em></h1>
+        <p class="hero-lead">Загрузите фото любого предмета. CardForge сохранит сам товар и сделает профессиональную подачу для маркетплейса, рекламы или соцсетей.</p>
+        <div class="hero-actions">
+          <a class="primary-btn" href="#generator">Попробовать бесплатно <span>→</span></a>
+          <a class="text-link" href="#examples">Посмотреть результат</a>
+        </div>
+        <div class="hero-facts" aria-label="Преимущества CardForge">
+          <div><b>1–2 минуты</b><span>от фото до карточки</span></div>
+          <div><b>6 стилей</b><span>для разных задач</span></div>
+          <div><b>Любой товар</b><span>от кружки до техники</span></div>
+        </div>
+      </div>
+
+      <div class="hero-demo" aria-label="Пример готовой карточки товара">
+        <div class="showcase-market-card showcase-market-card--hero">
+          <img src="./assets/showcase/headphones-card.png" alt="Готовая продающая карточка с наушниками" />
+          <span class="demo-tag accent">Готовая карточка</span>
+          <div class="source-inset hero-inset">
+            <span>Ваше фото</span>
+            <img src="./assets/products/electronics.png" alt="Исходное фото чёрных наушников" />
+          </div>
+          <div class="source-arrow">→</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="generator-section shell" id="generator">
+      <div class="generator-heading">
+        <span class="eyebrow">Попробуйте на своём товаре</span>
+        <h2>Загрузите фото. Остальное сделает CardForge.</h2>
+        <p>Без промптов, редакторов и дизайнера.</p>
+      </div>
+
+      <div class="generator-card">
+        <form id="generatorForm" class="generator-form">
+          <div class="generator-status-row">
+            <strong>Ваш товар</strong>
+            <div id="apiState" class="api-state"><i></i><span>Проверяем сервис…</span></div>
+          </div>
+
+          <label id="dropzone" class="dropzone">
+            <input id="product" type="file" accept="image/jpeg,image/png,image/webp" required hidden />
+            <img id="uploadPreview" alt="Предпросмотр товара" hidden />
+            <div id="uploadEmpty" class="upload-empty">
+              <span class="upload-icon">↑</span>
+              <strong>Загрузить фото товара</strong>
+              <small>JPG, PNG или WEBP · до 12 МБ</small>
+            </div>
+            <button id="replacePhoto" class="replace-photo" type="button" hidden>Заменить фото</button>
+          </label>
+
+          <div class="picker-block">
+            <div class="picker-title"><b>Что за товар?</b><span>Выберите ближайшую категорию</span></div>
+            <div id="categoryGrid" class="category-grid" role="radiogroup" aria-label="Категория товара"></div>
+          </div>
+
+          <div class="picker-block">
+            <div class="picker-title"><b>Как оформить?</b><span>Выберите результат</span></div>
+            <div id="sceneGrid" class="scene-grid" role="radiogroup" aria-label="Стиль карточки"></div>
+            <p id="sceneHint" class="scene-hint"></p>
+          </div>
+
+          <div class="copy-block">
+            <div class="copy-block-head"><span>Aa</span><div><b>Текст на карточке</b><small>Необязательно. Добавьте только реальные данные о товаре.</small></div></div>
+            <label class="field-block"><span class="field-title">Заголовок</span><input id="title" class="control" maxlength="100" placeholder="Например: Уют в каждой детали" /></label>
+            <label class="field-block"><span class="field-title">Преимущества</span><textarea id="features" class="control textarea compact-textarea" rows="2" maxlength="700" placeholder="Например: Ручная работа · Натуральная керамика · Подарочная упаковка"></textarea></label>
+          </div>
+
+          <details class="advanced-fields">
+            <summary>Формат и дополнительные пожелания <span>+</span></summary>
+            <div class="advanced-body">
+              <label class="field-block"><span class="field-title">Формат</span><select id="size" class="control"><option value="portrait">3:4 — маркетплейс</option><option value="square">1:1 — каталог</option><option value="story">9:16 — сторис</option></select></label>
+              <label class="field-block"><span class="field-title" data-notes-label>Дополнительные пожелания</span><textarea id="notes" class="control textarea" rows="3" maxlength="1200" placeholder="Например: тёплый свет, светлый фон, больше воздуха справа"></textarea></label>
+            </div>
+          </details>
+
+          <div id="errorBox" class="message error" hidden></div>
+          <button id="generateBtn" class="generate-btn" type="submit"><span>✦</span> Создать карточку бесплатно</button>
+          <p class="privacy-note">Первая генерация бесплатная. Регистрация потребуется только перед запуском.</p>
+        </form>
+
+        <aside class="result-card">
+          <div class="result-card-head"><div><span>Результат</span><h3>Ваша готовая карточка</h3></div><span class="result-badge">AI</span></div>
+          <div id="resultStage" class="result-stage portrait">
+            <div id="resultPlaceholder" class="result-placeholder"><span>✦</span><strong>Результат появится здесь</strong><small>Загрузите фото и нажмите «Создать карточку»</small></div>
+            <img id="resultImage" alt="Сгенерированная карточка" hidden />
+            <div id="loadingOverlay" class="loading-overlay" hidden><span class="spinner"></span><strong>Создаём карточку…</strong><small>Обычно 1–2 минуты</small></div>
+          </div>
+          <div class="result-actions"><button id="downloadBtn" type="button" disabled>↓ Скачать</button><button id="againBtn" type="button" disabled>↻ Ещё вариант</button></div>
+          <div id="meta" class="meta"></div>
+          <div id="postGeneratePaywall" class="credit-notice" hidden><div><strong>Бесплатная генерация использована</strong><span>Пополните баланс для новых вариантов.</span></div><button id="paywallBuyBtn" type="button">Купить кредиты</button></div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="how shell" id="how">
+      <div class="section-heading centered"><span class="eyebrow">Как это работает</span><h2>Три шага — и карточка готова</h2></div>
+      <div class="steps">
+        <article><span>1</span><div><b>Загрузите фото</b><p>Подойдёт обычная фотография товара с телефона.</p></div></article>
+        <article><span>2</span><div><b>Выберите стиль</b><p>Каталог, окружение, композиция, инфографика или свой вариант.</p></div></article>
+        <article><span>3</span><div><b>Добавьте текст и получите результат</b><p>Заголовки и преимущества можно встроить прямо в дизайн карточки.</p></div></article>
+      </div>
+    </section>
+
+    <section class="examples shell" id="examples">
+      <div class="section-heading">
+        <span class="eyebrow">Примеры результата</span>
+        <h2>Красивые карточки, которые хочется листать</h2>
+        <p>Кликните по карточке или наведите курсор — активная карточка плавно раздвигает остальные. На телефоне можно листать свайпом.</p>
+      </div>
+      <div class="showcase-toolbar">
+        <button id="showcasePrev" class="showcase-nav" type="button" aria-label="Предыдущая карточка">←</button>
+        <div id="showcaseDots" class="showcase-dots" aria-label="Навигация по примерам"></div>
+        <button id="showcaseNext" class="showcase-nav" type="button" aria-label="Следующая карточка">→</button>
+      </div>
+      <div id="showcaseRail" class="showcase-rail" role="list">
+        <figure class="showcase-card active" data-showcase-index="0" role="listitem" tabindex="0" aria-label="Пример карточки с наушниками">
+          <img src="./assets/showcase/headphones-card.png" alt="Пример продающей карточки для наушников" />
+          <figcaption><b>Электроника</b><span>Неоновая premium-подача с продающим заголовком и плашками.</span></figcaption>
+        </figure>
+        <figure class="showcase-card" data-showcase-index="1" role="listitem" tabindex="0" aria-label="Пример карточки с кружкой">
+          <img src="./assets/showcase/mug-card.png" alt="Пример продающей карточки для кружки" />
+          <figcaption><b>Товары для дома</b><span>Тёплая lifestyle-сцена, уютный оффер и аккуратные преимущества.</span></figcaption>
+        </figure>
+        <figure class="showcase-card" data-showcase-index="2" role="listitem" tabindex="0" aria-label="Пример карточки с сумкой">
+          <img src="./assets/showcase/tote-card.png" alt="Пример продающей карточки для сумки" />
+          <figcaption><b>Другие товары</b><span>Стильная fashion-подача с чистой композицией и модным акцентом.</span></figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section class="final-cta shell">
+      <div><span class="eyebrow">Готовы попробовать?</span><h2>Никаких сложных настроек.<br><em>Просто загрузите фото.</em></h2><p>Первая генерация бесплатная.</p></div>
+      <a class="primary-btn" href="#generator">Создать карточку <span>→</span></a>
+    </section>
+
+    <section class="faq shell" id="faq">
+      <div class="section-heading centered"><span class="eyebrow">FAQ</span><h2>Частые вопросы</h2></div>
+      <div class="faq-list">
+        <details><summary>CardForge меняет сам товар?</summary><p>Нет. Сервис старается сохранить форму, пропорции, цвет, материал, логотип и видимые детали товара. Меняется подача: фон, свет, окружение и композиция.</p></details>
+        <details><summary>Нужно писать промпт?</summary><p>Нет. Достаточно выбрать стиль. Пожелания можно добавить только если хочется точнее направить результат.</p></details>
+        <details><summary>Можно добавить текст прямо на карточку?</summary><p>Да. Укажите заголовок и реальные преимущества товара — CardForge встроит их в дизайн и не будет придумывать характеристики за вас.</p></details>
+        <details><summary>Подойдёт фото с телефона?</summary><p>Да. Лучше всего работает чёткая фотография, где товар хорошо виден и не перекрыт другими предметами.</p></details>
+      </div>
+    </section>
+
+    <section class="contact-strip shell" id="contact">
+      <div><span class="eyebrow">Мы на связи</span><h2>Есть вопрос или что-то пошло не так?</h2><p>Напишите через форму — обращение сохранится в CardForge, и мы сможем разобрать его вместе с историей сервиса.</p></div>
+      <button class="contact-button" type="button" data-open-feedback>Написать нам <span>→</span></button>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="shell footer-inner footer-inner-v2">
+      <div class="footer-brand-block"><a class="brand" href="#top"><span>Card</span><b>Forge</b></a><span>Фото товара → готовая продающая карточка</span></div>
+      <div class="footer-links">
+        <button type="button" data-open-legal="terms">Пользовательское соглашение</button>
+        <button type="button" data-open-legal="privacy">Конфиденциальность</button>
+        <button type="button" data-open-feedback>Обратная связь</button>
+      </div>
+      <a class="footer-cta" href="#generator">Создать карточку →</a>
+    </div>
+  </footer>
+
+  <div id="authModal" class="modal" hidden>
+    <div class="modal-backdrop" data-close-modal="auth"></div>
+    <section class="modal-card auth-card" role="dialog" aria-modal="true" aria-labelledby="authTitle">
+      <button class="modal-close" type="button" data-close-modal="auth">×</button>
+      <span class="eyebrow">Аккаунт CardForge</span>
+      <div class="auth-tabs"><button type="button" class="auth-tab active" data-auth-mode="login">Войти</button><button type="button" class="auth-tab" data-auth-mode="register">Регистрация</button></div>
+      <h2 id="authTitle">Войти в CardForge</h2>
+      <p id="authLead">Введите email и пароль.</p>
+      <label class="auth-field"><span>Email</span><input id="authEmail" type="email" autocomplete="email" placeholder="you@example.com" /></label>
+      <label class="auth-field"><span>Пароль</span><input id="authPassword" type="password" autocomplete="current-password" minlength="8" maxlength="128" placeholder="Минимум 8 символов" /></label>
+      <label id="confirmField" class="auth-field" hidden><span>Повторите пароль</span><input id="authPasswordConfirm" type="password" autocomplete="new-password" minlength="8" maxlength="128" placeholder="Повторите пароль" /></label>
+      <label id="authTermsRow" class="legal-check auth-terms" hidden>
+        <input id="authTerms" type="checkbox" />
+        <span>Я принимаю <button type="button" class="inline-legal" data-open-legal="terms">Пользовательское соглашение</button> и <button type="button" class="inline-legal" data-open-legal="privacy">Политику конфиденциальности</button>.</span>
+      </label>
+      <button id="authSubmitBtn" class="generate-btn" type="button">Войти</button>
+      <div id="authMessage" class="auth-message" hidden></div>
+      <small>Новый аккаунт получает 1 бесплатную генерацию.</small>
+    </section>
+  </div>
+
+  <div id="billingModal" class="modal" hidden>
+    <div class="modal-backdrop" data-close-modal="billing"></div>
+    <section class="modal-card billing-card billing-card-v2" role="dialog" aria-modal="true" aria-labelledby="billingTitle">
+      <button class="modal-close billing-close" type="button" data-close-modal="billing">×</button>
+      <div class="billing-hero">
+        <div>
+          <span class="billing-kicker">✦ Кредиты CardForge</span>
+          <h2 id="billingTitle">Выберите пакет генераций</h2>
+          <p>1 кредит = 1 успешная генерация. При технической ошибке кредит не списывается.</p>
+        </div>
+        <div class="billing-balance"><small>Ваш баланс</small><strong><span id="billingCredits">0</span> <em>кредитов</em></strong></div>
+      </div>
+      <div class="billing-trust-row"><span>✓ Без подписки</span><span>✓ Кредиты не сгорают</span><span>✓ Оплата через Lava.top</span></div>
+      <div id="packageGrid" class="package-grid package-grid-v2"><div class="packages-loading">Загружаем тарифы…</div></div>
+      <label class="legal-check billing-terms">
+        <input id="billingTerms" type="checkbox" />
+        <span>Я принимаю <button type="button" class="inline-legal" data-open-legal="terms">Пользовательское соглашение</button> и подтверждаю условия оплаты.</span>
+      </label>
+      <div class="billing-note"><span>🔒</span><div><b>Безопасная оплата</b><small>После выбора пакета вы перейдёте на защищённую платёжную страницу. Кредиты начисляются автоматически после подтверждения платежа.</small></div></div>
+      <div id="billingMessage" class="auth-message" hidden></div>
+    </section>
+  </div>
+
+  <div id="feedbackModal" class="modal" hidden>
+    <div class="modal-backdrop" data-close-modal="feedback"></div>
+    <section class="modal-card feedback-card" role="dialog" aria-modal="true" aria-labelledby="feedbackTitle">
+      <button class="modal-close" type="button" data-close-modal="feedback">×</button>
+      <span class="eyebrow">Обратная связь</span>
+      <h2 id="feedbackTitle">Напишите нам</h2>
+      <p>Ошибка, вопрос по оплате или идея для CardForge — сообщение попадёт прямо в нашу внутреннюю панель.</p>
+      <label class="auth-field"><span>Тема</span><select id="feedbackTopic" class="control"><option value="question">Вопрос</option><option value="payment">Оплата и кредиты</option><option value="generation">Ошибка генерации</option><option value="idea">Предложение</option><option value="other">Другое</option></select></label>
+      <label class="auth-field"><span>Email для ответа</span><input id="feedbackEmail" type="email" maxlength="254" placeholder="you@example.com" /></label>
+      <label class="auth-field"><span>Сообщение</span><textarea id="feedbackMessage" class="control textarea feedback-textarea" maxlength="3000" placeholder="Опишите вопрос или проблему. Если это ошибка, напишите, что произошло и после какого действия."></textarea></label>
+      <div class="feedback-counter"><span id="feedbackCount">0</span>/3000</div>
+      <button id="feedbackSubmit" class="generate-btn" type="button">Отправить сообщение</button>
+      <div id="feedbackStatus" class="auth-message" hidden></div>
+      <small>Отправляя сообщение, вы соглашаетесь на обработку указанных данных только для рассмотрения обращения и ответа.</small>
+    </section>
+  </div>
+
+  <div id="legalModal" class="modal" hidden>
+    <div class="modal-backdrop" data-close-modal="legal"></div>
+    <section class="modal-card legal-card" role="dialog" aria-modal="true" aria-labelledby="legalTitle">
+      <button class="modal-close" type="button" data-close-modal="legal">×</button>
+      <span class="eyebrow">CardForge · редакция 02.10.2026</span>
+      <h2 id="legalTitle">Правила сервиса и данные</h2>
+      <div class="legal-tabs"><button type="button" class="legal-tab active" data-legal-tab="terms">Пользовательское соглашение</button><button type="button" class="legal-tab" data-legal-tab="privacy">Конфиденциальность</button></div>
+      <article id="legalTerms" class="legal-content">
+        <h3>Пользовательское соглашение</h3>
+        <p><b>1. Сервис.</b> CardForge предоставляет инструменты для AI-обработки фотографий товаров и создания рекламных материалов. Пользователь самостоятельно выбирает исходные изображения, тексты и параметры генерации.</p>
+        <p><b>2. Аккаунт.</b> Для генераций используется аккаунт с email и паролем. Пользователь отвечает за сохранность своих данных доступа и действия в своей сессии.</p>
+        <p><b>3. Контент.</b> Пользователь подтверждает, что имеет право загружать используемые изображения, логотипы, тексты и иные материалы. Запрещено использовать сервис для незаконного контента или нарушения прав третьих лиц.</p>
+        <p><b>4. Результат AI.</b> Генеративные модели могут допускать неточности. Перед публикацией пользователь обязан проверить изображение, текст, характеристики товара, товарные знаки и иные сведения. CardForge не гарантирует идентичность каждого результата ожиданиям пользователя.</p>
+        <p><b>5. Кредиты и оплата.</b> Один кредит используется за одну успешно завершённую генерацию. При подтверждённой технической ошибке генерации кредит не должен списываться. Оплата пакетов проводится внешним платёжным провайдером Lava.top. Автоматической подписки нет.</p>
+        <p><b>6. Возвраты.</b> Вопросы ошибочных или спорных списаний рассматриваются индивидуально с учётом факта оказания услуги, правил платёжного провайдера и применимого законодательства. Для обращения используйте форму обратной связи.</p>
+        <p><b>7. Доступность.</b> Сервис может временно быть недоступен из-за технических работ, ограничений AI-провайдеров или внешней инфраструктуры.</p>
+        <p><b>8. Изменения.</b> Условия могут обновляться вместе с развитием сервиса. Актуальная редакция публикуется на сайте.</p>
+        <p><b>9. Связь.</b> Вопросы по сервису, оплате и данным можно направить через форму «Обратная связь» на сайте.</p>
+      </article>
+      <article id="legalPrivacy" class="legal-content" hidden>
+        <h3>Политика конфиденциальности</h3>
+        <p><b>Какие данные хранятся.</b> Email аккаунта, технические данные сессий в хешированном виде, история генераций, баланс кредитов, сведения о платежах, события использования и сообщения обратной связи.</p>
+        <p><b>Для чего.</b> Эти данные используются для авторизации, работы генераций, начисления кредитов, поддержки пользователей, предотвращения злоупотреблений и внутренней аналитики сервиса.</p>
+        <p><b>Изображения.</b> Загруженные изображения передаются выбранному AI-провайдеру для выполнения генерации. CardForge не сохраняет исходные фотографии в аналитическую базу. Временный результат может храниться в серверном кэше ограниченное время для безопасного повторного получения после сетевого сбоя.</p>
+        <p><b>Оплата.</b> Платёжные реквизиты вводятся на стороне Lava.top. CardForge хранит только служебные данные платежа: пакет, сумму, статус, идентификатор и email.</p>
+        <p><b>Обратная связь.</b> Сообщение, тема и указанный email сохраняются в базе CardForge, чтобы администратор мог рассмотреть обращение.</p>
+        <p><b>Передача данных.</b> Данные не предназначены для продажи рекламодателям. Необходимая информация может передаваться поставщикам инфраструктуры, AI и платежей исключительно для работы соответствующей функции.</p>
+        <p><b>Связь по данным.</b> Для вопросов об обработке данных используйте форму обратной связи.</p>
+      </article>
+      <div class="legal-footer-note">Этот текст описывает правила работы CardForge и не заменяет индивидуальную юридическую консультацию для конкретной юрисдикции.</div>
+    </section>
+  </div>
+
+  <div id="siteToast" class="site-toast" hidden></div>
+  <script src="./config.js?v=8111"></script>
+  <script src="./app.js?v=8111"></script>
+</body>
+</html>
