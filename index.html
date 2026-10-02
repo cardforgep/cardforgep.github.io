@@ -4,9 +4,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#ffffff" />
+  <meta name="referrer" content="strict-origin-when-cross-origin" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://31.76.56.162; object-src 'none'; base-uri 'self'; form-action 'self' https://*.lava.top https://lava.top" />
   <meta name="description" content="CardForge превращает обычное фото товара в красивую продающую карточку для маркетплейсов, рекламы и соцсетей." />
   <title>CardForge — фото товара в продающую карточку</title>
-  <link rel="stylesheet" href="./styles.css?v=8111" />
+  <link rel="stylesheet" href="./styles.css?v=8120" />
 </head>
 <body>
   <header class="topbar">
@@ -19,6 +21,7 @@
         <button class="nav-feedback" id="navFeedbackBtn" type="button">Написать нам</button>
       </nav>
       <div class="account-actions">
+        <div class="language-switcher" aria-label="Language"><button type="button" data-lang="ru" aria-pressed="true">RU</button><button type="button" data-lang="en" aria-pressed="false">EN</button><button type="button" data-lang="de" aria-pressed="false">DE</button></div>
         <button id="loginBtn" class="login-btn" type="button">Войти</button>
         <div id="userActions" class="user-actions" hidden>
           <button id="balanceBtn" class="balance-pill" type="button">✦ <span id="creditsCount">0</span></button>
@@ -281,7 +284,7 @@
       </article>
       <article id="legalPrivacy" class="legal-content" hidden>
         <h3>Политика конфиденциальности</h3>
-        <p><b>Какие данные хранятся.</b> Email аккаунта, технические данные сессий в хешированном виде, история генераций, баланс кредитов, сведения о платежах, события использования и сообщения обратной связи.</p>
+        <p><b>Какие данные хранятся.</b> Email аккаунта, технические данные сессий в хешированном виде, история генераций, баланс кредитов, сведения о платежах, события использования и сообщения обратной связи. Для агрегированной геоаналитики по IP на сервере определяется и сохраняется только приблизительная страна, регион и город; сырой IP для этой цели в аналитической базе не сохраняется.</p>
         <p><b>Для чего.</b> Эти данные используются для авторизации, работы генераций, начисления кредитов, поддержки пользователей, предотвращения злоупотреблений и внутренней аналитики сервиса.</p>
         <p><b>Изображения.</b> Загруженные изображения передаются выбранному AI-провайдеру для выполнения генерации. CardForge не сохраняет исходные фотографии в аналитическую базу. Временный результат может храниться в серверном кэше ограниченное время для безопасного повторного получения после сетевого сбоя.</p>
         <p><b>Оплата.</b> Платёжные реквизиты вводятся на стороне Lava.top. CardForge хранит только служебные данные платежа: пакет, сумму, статус, идентификатор и email.</p>
@@ -294,7 +297,8 @@
   </div>
 
   <div id="siteToast" class="site-toast" hidden></div>
-  <script src="./config.js?v=8111"></script>
-  <script src="./app.js?v=8111"></script>
+  <script src="./config.js?v=8120"></script>
+  <script src="./i18n.js?v=8120"></script>
+  <script src="./app.js?v=8120"></script>
 </body>
 </html>

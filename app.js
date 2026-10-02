@@ -1,6 +1,7 @@
 (() => {
   const cfg = window.CARDFORGE_CONFIG || {};
   const API = String(cfg.API_BASE_URL || "").replace(/\/$/, "");
+  const tr = (value) => window.CF_I18N?.t?.(String(value ?? "")) ?? String(value ?? "");
   const TOKEN_KEY = "cardforge_local_token";
   const VISITOR_KEY = "cardforge_visitor_id";
 
@@ -206,7 +207,7 @@
   async function trackEvent(eventName, metadata = {}) {
     if (!API) return;
     try {
-      const headers = { "Content-Type": "application/json" };
+      const headers = { "Content-Type": "application/json", "Accept-Language": window.CF_I18N?.language || "ru" };
       if (sessionToken) headers.Authorization = `Bearer ${sessionToken}`;
       await fetch(`${API}/api/events`, {
         method: "POST",
@@ -241,13 +242,13 @@
   }
 
   function showError(message) {
-    errorBox.textContent = message || "";
+    errorBox.textContent = tr(message || "");
     errorBox.hidden = !message;
   }
 
   function showToast(message, type = "") {
     if (!siteToast) return;
-    siteToast.textContent = message;
+    siteToast.textContent = tr(message);
     siteToast.className = `site-toast ${type}`.trim();
     siteToast.hidden = false;
     clearTimeout(toastTimer);
@@ -420,6 +421,7 @@
 
   async function apiFetch(path, options = {}, auth = false) {
     const headers = new Headers(options.headers || {});
+    headers.set("Accept-Language", window.CF_I18N?.language || "ru");
     if (auth) {
       if (!sessionToken) throw Object.assign(new Error("Войдите в аккаунт"), { code: "AUTH_REQUIRED" });
       headers.set("Authorization", `Bearer ${sessionToken}`);
@@ -522,7 +524,7 @@
       const res = await fetch(`${API}/api/auth/${authMode === "register" ? "register" : "login"}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password, visitorId, termsAccepted: authMode === "register" ? Boolean($("authTerms")?.checked) : undefined })
+        body: JSON.stringify({ email, password, visitorId, termsAccepted: authMode === "register" ? Boolean($("authTerms")?.checked) : undefined, language: window.CF_I18N?.language || "ru" })
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || "Ошибка авторизации");
@@ -539,7 +541,7 @@
       showToast(authMode === "register" ? "Аккаунт создан. Первая генерация доступна бесплатно." : "Вы вошли в аккаунт.", "good");
       if (resumeGeneration) setTimeout(() => generate(), 120);
     } catch (e) {
-      msg.textContent = e?.message || "Ошибка авторизации";
+      msg.textContent = tr(e?.message || "Ошибка авторизации");
       msg.className = "auth-message error";
       msg.hidden = false;
     } finally {
@@ -569,8 +571,37 @@
   paywallBuyBtn.addEventListener("click", openBilling);
 
   function money(amount, currency) {
-    try { return new Intl.NumberFormat("ru-RU", { style: "currency", currency, maximumFractionDigits: 0 }).format(amount); }
+    try { return new Intl.NumberFormat(window.CF_I18N?.language === "de" ? "de-DE" : window.CF_I18N?.language === "en" ? "en-US" : "ru-RU", { style: "currency", currency, maximumFractionDigits: 0 }).format(amount); }
     catch { return `${amount} ${currency}`; }
+  }
+
+  function buildPackageCard(pack, { publicCard = false } = {}) {
+    const card = document.createElement("article");
+    card.className = publicCard
+      ? `public-package-card${pack.popular ? " popular" : ""}`
+      : `package-card package-card-v2${pack.popular ? " popular" : ""}`;
+    if (pack.popular) {
+      const badge = document.createElement("span"); badge.className = publicCard ? "public-package-badge" : "package-badge"; badge.textContent = "Популярный"; card.appendChild(badge);
+    }
+    if (publicCard) {
+      const name = document.createElement("span"); name.className = "public-package-name"; name.textContent = String(pack.title || "");
+      const credits = document.createElement("div"); credits.className = "public-package-credits"; credits.textContent = String(Number(pack.credits || 0));
+      const creditsSmall = document.createElement("small"); creditsSmall.textContent = " генераций"; credits.appendChild(creditsSmall);
+      const price = document.createElement("div"); price.className = "public-package-price"; price.textContent = money(pack.amount, pack.currency);
+      const p = document.createElement("p"); p.textContent = Number(pack.credits) <= 10 ? "Для знакомства и первых карточек" : Number(pack.credits) < 100 ? "Для регулярной работы с товарами" : "Для магазина и большого каталога";
+      const button = document.createElement("button"); button.type = "button"; button.textContent = "Выбрать пакет";
+      card.append(name, credits, price, p, button);
+      return { card, button };
+    }
+    const top = document.createElement("div"); top.className = "package-top";
+    const titleBox = document.createElement("div"); const small = document.createElement("small"); small.textContent = "Пакет"; const h3 = document.createElement("h3"); h3.textContent = String(pack.title || ""); titleBox.append(small,h3);
+    const icon = document.createElement("span"); icon.className = "package-icon"; icon.textContent = "✦"; top.append(titleBox,icon);
+    const credits = document.createElement("div"); credits.className = "package-credits"; const strong = document.createElement("strong"); strong.textContent = String(Number(pack.credits || 0)); const span = document.createElement("span"); span.textContent = "генераций"; credits.append(strong,span);
+    const desc = document.createElement("p"); desc.className = "package-description"; desc.textContent = String(pack.description || "Для создания карточек товаров");
+    const priceRow = document.createElement("div"); priceRow.className = "package-price-row"; const price = document.createElement("div"); price.className = "package-price"; price.textContent = money(pack.amount, pack.currency); const per = document.createElement("small"); per.textContent = `≈ ${money(Number(pack.amount) / Math.max(1, Number(pack.credits)), pack.currency)} / карточка`; priceRow.append(price,per);
+    const button = document.createElement("button"); button.className = "package-buy"; button.type = "button"; button.append(document.createTextNode("Выбрать пакет ")); const arrow=document.createElement("span"); arrow.textContent="→"; button.appendChild(arrow);
+    card.append(top,credits,desc,priceRow,button);
+    return { card, button };
   }
 
   async function loadPackages() {
@@ -578,31 +609,27 @@
     const msg = $("billingMessage");
     if (!grid || !msg) return;
     msg.hidden = true;
-    grid.innerHTML = '<div class="packages-loading">Загружаем тарифы…</div>';
+    grid.replaceChildren();
+    const loading = document.createElement("div"); loading.className = "packages-loading"; loading.textContent = "Загружаем тарифы…"; grid.appendChild(loading);
     try {
-      const res = await fetch(`${API}/api/billing/packages`, { cache: "no-store" });
+      const res = await fetch(`${API}/api/billing/packages`, { cache: "no-store", headers: { "Accept-Language": window.CF_I18N?.language || "ru" } });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Не удалось загрузить пакеты");
-      grid.innerHTML = "";
+      grid.replaceChildren();
       for (const pack of data.packages || []) {
-        const perGeneration = Number(pack.amount) / Math.max(1, Number(pack.credits));
-        const card = document.createElement("article");
-        card.className = `package-card package-card-v2${pack.popular ? " popular" : ""}`;
-        card.innerHTML = `${pack.popular ? '<span class="package-badge">Популярный</span>' : ''}
-          <div class="package-top"><div><small>Пакет</small><h3>${pack.title}</h3></div><span class="package-icon">✦</span></div>
-          <div class="package-credits"><strong>${pack.credits}</strong><span>генераций</span></div>
-          <p class="package-description">${pack.description || "Для создания карточек товаров"}</p>
-          <div class="package-price-row"><div class="package-price">${money(pack.amount, pack.currency)}</div><small>≈ ${money(perGeneration, pack.currency)} / карточка</small></div>
-          <button class="package-buy" type="button">Выбрать пакет <span>→</span></button>`;
-        card.querySelector("button").addEventListener("click", (e) => buyPackage(pack.id, e.currentTarget));
+        const { card, button } = buildPackageCard(pack);
+        button.addEventListener("click", (e) => buyPackage(pack.id, e.currentTarget));
         grid.appendChild(card);
       }
       syncBillingButtons();
+      window.CF_I18N?.apply?.();
     } catch (e) {
-      grid.innerHTML = '<div class="packages-loading">Не удалось загрузить тарифы.</div>';
-      msg.textContent = e?.message || "Ошибка тарифов";
+      grid.replaceChildren();
+      const loadingError = document.createElement("div"); loadingError.className = "packages-loading"; loadingError.textContent = "Не удалось загрузить тарифы."; grid.appendChild(loadingError);
+      msg.textContent = tr(e?.message || "Ошибка тарифов");
       msg.className = "auth-message error";
       msg.hidden = false;
+      window.CF_I18N?.apply?.();
     }
   }
 
@@ -640,7 +667,7 @@
     } catch (e) {
       button.disabled = false;
       button.innerHTML = 'Выбрать пакет <span>→</span>';
-      msg.textContent = e?.message || "Ошибка оплаты";
+      msg.textContent = tr(e?.message || "Ошибка оплаты");
       msg.className = "auth-message error";
       msg.hidden = false;
     }
@@ -671,7 +698,7 @@
       const res = await apiFetch("/api/feedback", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ topic, email, message, visitorId })
+        body: JSON.stringify({ topic, email, message, visitorId, language: window.CF_I18N?.language || "ru" })
       }, Boolean(sessionToken));
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || "Не удалось отправить сообщение");
@@ -682,7 +709,7 @@
       status.hidden = false;
       showToast("Сообщение отправлено. Спасибо!", "good");
     } catch (e) {
-      status.textContent = e?.message || "Не удалось отправить сообщение";
+      status.textContent = tr(e?.message || "Не удалось отправить сообщение");
       status.className = "auth-message error";
       status.hidden = false;
     } finally {
@@ -758,6 +785,7 @@
     body.append("title", $("title").value.trim());
     body.append("features", $("features").value.trim());
     body.append("size", $("size").value);
+    body.append("language", window.CF_I18N?.language || "ru");
 
     generateBtn.disabled = true;
     generateBtn.innerHTML = "<span>✦</span> Генерация…";
@@ -901,22 +929,20 @@
     const grid = $("publicPackageGrid");
     if (!grid) return;
     try {
-      const res = await fetch(`${API}/api/billing/packages`, { cache: "no-store" });
+      const res = await fetch(`${API}/api/billing/packages`, { cache: "no-store", headers: { "Accept-Language": window.CF_I18N?.language || "ru" } });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Не удалось загрузить тарифы");
-      grid.innerHTML = "";
+      grid.replaceChildren();
       for (const pack of data.packages || []) {
-        const card = document.createElement("article");
-        card.className = `public-package-card${pack.popular ? " popular" : ""}`;
-        card.innerHTML = `${pack.popular ? '<span class="public-package-badge">Популярный</span>' : ''}<span class="public-package-name">${pack.title}</span><div class="public-package-credits">${pack.credits}<small> генераций</small></div><div class="public-package-price">${money(pack.amount, pack.currency)}</div><p>${pack.credits <= 10 ? "Для знакомства и первых карточек" : pack.credits < 100 ? "Для регулярной работы с товарами" : "Для магазина и большого каталога"}</p><button type="button">Выбрать пакет</button>`;
-        card.querySelector("button").addEventListener("click", () => {
-          if (!sessionToken) openAuth("register", "pricing");
-          else openBilling();
-        });
+        const { card, button } = buildPackageCard(pack, { publicCard: true });
+        button.addEventListener("click", () => { if (!sessionToken) openAuth("register", "pricing"); else openBilling(); });
         grid.appendChild(card);
       }
+      window.CF_I18N?.apply?.();
     } catch {
-      grid.innerHTML = '<div class="pricing-loading">Тарифы временно недоступны. Откройте окно покупки после входа.</div>';
+      grid.replaceChildren();
+      const e = document.createElement("div"); e.className = "pricing-loading"; e.textContent = "Тарифы временно недоступны. Откройте окно покупки после входа."; grid.appendChild(e);
+      window.CF_I18N?.apply?.();
     }
   }
 
@@ -1019,6 +1045,7 @@
   async function boot() {
     renderCategories();
     renderScenes();
+    window.CF_I18N?.apply?.();
     updateCustomStyleField();
     updateGenerateButton();
     initHeroCarousel();
