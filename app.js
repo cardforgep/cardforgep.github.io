@@ -639,8 +639,11 @@
   function syncBillingButtons() {
     const accepted = Boolean($("billingTerms")?.checked);
     document.querySelectorAll(".package-buy").forEach((button) => {
-      button.disabled = !accepted;
-      button.title = accepted ? "" : "Сначала примите пользовательское соглашение";
+      // Keep package controls visually stable. If terms are not accepted yet,
+      // buyPackage() shows the CardForge explanation instead of turning the
+      // pricing cards into a row of disabled/washed-out buttons.
+      if (!button.dataset.processing) button.disabled = false;
+      button.title = accepted ? "" : "Перед оплатой подтвердите условия ниже";
     });
   }
 
@@ -655,6 +658,7 @@
       msg.hidden = false;
       return;
     }
+    button.dataset.processing = "1";
     button.disabled = true;
     button.textContent = "Создаём оплату…";
     try {
@@ -668,6 +672,7 @@
       if (!data.paymentUrl) throw new Error("Платёжная система не вернула ссылку");
       location.href = data.paymentUrl;
     } catch (e) {
+      delete button.dataset.processing;
       button.disabled = false;
       button.innerHTML = 'Выбрать пакет <span>→</span>';
       msg.textContent = tr(e?.message || "Ошибка оплаты");
@@ -732,6 +737,29 @@
 
   function clearPendingGenerationKey() {
     pendingGenerationKey = "";
+  }
+
+  function safeGenerationMessage(message, code = "") {
+    const text = String(message || "");
+    const raw = `${code} ${text}`.toLowerCase();
+    const lang = window.CF_I18N?.language || "ru";
+    const sexual = raw.includes("sexual") || raw.includes("explicit content") || raw.includes("safety_violations=[sexual]");
+    if (sexual) {
+      return {
+        ru: "CardForge не создаёт изображения сексуального или откровенного характера. Измените исходное фото или описание и попробуйте снова.",
+        en: "CardForge does not create sexual or explicit images. Change the source photo or description and try again.",
+        de: "CardForge erstellt keine sexuellen oder expliziten Bilder. Ändere das Ausgangsbild oder die Beschreibung und versuche es erneut.",
+      }[lang] || "Запрос не соответствует правилам CardForge.";
+    }
+    const upstreamLeak = /openai|gpt-|gemini|google generative|grok|xai|flux|help\.openai\.com|req_[a-z0-9]+/i.test(text);
+    if (upstreamLeak) {
+      return {
+        ru: "Не удалось создать изображение. Кредит не списан. Попробуйте ещё раз или измените фото/описание.",
+        en: "The image could not be generated. Your credit was not charged. Try again or change the image/description.",
+        de: "Das Bild konnte nicht erstellt werden. Dein Credit wurde nicht belastet. Versuche es erneut oder ändere Bild/Beschreibung.",
+      }[lang] || "Не удалось создать изображение.";
+    }
+    return text || "Ошибка генерации";
   }
 
   async function fetchGeneration(body, generationKey) {
@@ -825,7 +853,7 @@
       }
       if (!res.ok) {
         if (data.code !== "GENERATION_IN_PROGRESS") clearPendingGenerationKey();
-        const apiError = new Error(data.error || `Ошибка API ${res.status}`);
+        const apiError = new Error(safeGenerationMessage(data.error || `Ошибка генерации ${res.status}`, data.code));
         apiError.serverResponse = true;
         apiError.code = data.code || null;
         apiError.creditRefunded = Boolean(data.creditRefunded);
