@@ -49,6 +49,9 @@
     visitorId = globalThis.crypto?.randomUUID?.() || `v_${Date.now()}_${Math.random().toString(36).slice(2)}`;
     localStorage.setItem(VISITOR_KEY, visitorId);
   }
+  const clientTimezone = (() => {
+    try { return Intl.DateTimeFormat().resolvedOptions().timeZone || ""; } catch { return ""; }
+  })();
   let account = null;
   let authMode = "login";
   let toastTimer = null;
@@ -213,7 +216,7 @@
         method: "POST",
         headers,
         keepalive: true,
-        body: JSON.stringify({ eventName, visitorId, ...metadata }),
+        body: JSON.stringify({ eventName, visitorId, clientTimezone, ...metadata }),
       });
     } catch {}
   }
@@ -227,7 +230,7 @@
         method: "POST",
         headers,
         keepalive: true,
-        body: JSON.stringify({ visitorId }),
+        body: JSON.stringify({ visitorId, clientTimezone }),
       });
     } catch {}
   }
@@ -524,7 +527,7 @@
       const res = await fetch(`${API}/api/auth/${authMode === "register" ? "register" : "login"}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password, visitorId, termsAccepted: authMode === "register" ? Boolean($("authTerms")?.checked) : undefined, language: window.CF_I18N?.language || "ru" })
+        body: JSON.stringify({ email, password, visitorId, clientTimezone, termsAccepted: authMode === "register" ? Boolean($("authTerms")?.checked) : undefined, language: window.CF_I18N?.language || "ru" })
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || "Ошибка авторизации");
@@ -698,7 +701,7 @@
       const res = await apiFetch("/api/feedback", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ topic, email, message, visitorId, language: window.CF_I18N?.language || "ru" })
+        body: JSON.stringify({ topic, email, message, visitorId, clientTimezone, language: window.CF_I18N?.language || "ru" })
       }, Boolean(sessionToken));
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || "Не удалось отправить сообщение");
@@ -779,6 +782,7 @@
     const body = new FormData();
     body.append("product", file);
     body.append("visitorId", visitorId);
+    if (clientTimezone) body.append("clientTimezone", clientTimezone);
     body.append("category", selectedCategory);
     body.append("scene", selectedScene);
     body.append("prompt", $("notes").value.trim());

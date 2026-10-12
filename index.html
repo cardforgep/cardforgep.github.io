@@ -6,9 +6,88 @@
   <meta name="theme-color" content="#ffffff" />
   <meta name="referrer" content="strict-origin-when-cross-origin" />
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://31.76.56.162; object-src 'none'; base-uri 'self'; form-action 'self' https://*.lava.top https://lava.top" />
-  <meta name="description" content="CardForge превращает обычное фото товара в красивую продающую карточку для маркетплейсов, рекламы и соцсетей." />
-  <title>CardForge — фото товара в продающую карточку</title>
-  <link rel="stylesheet" href="./styles.css?v=8120" />
+
+  <!-- SEO: Google and other search engines may index/follow the public landing page. -->
+  <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1" />
+  <meta name="googlebot" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1" />
+  <meta name="description" content="CardForge — AI-сервис для создания продающих карточек товаров для Wildberries, Ozon и интернет-магазинов. Загрузите фото и получите профессиональную карточку с фоном, инфографикой и текстом." />
+  <link rel="canonical" href="https://cardforgep.github.io/" />
+
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="CardForge" />
+  <meta property="og:locale" content="ru_RU" />
+  <meta property="og:title" content="CardForge — карточки товаров для маркетплейсов с AI" />
+  <meta property="og:description" content="Создавайте продающие карточки товаров для Wildberries, Ozon и интернет-магазинов из обычной фотографии." />
+  <meta property="og:url" content="https://cardforgep.github.io/" />
+  <meta property="og:image" content="https://cardforgep.github.io/assets/showcase/headphones-card.png" />
+  <meta property="og:image:alt" content="Пример продающей карточки товара, созданной в CardForge" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="CardForge — карточки товаров для маркетплейсов с AI" />
+  <meta name="twitter:description" content="Из обычного фото — в профессиональную карточку товара для онлайн-продаж." />
+  <meta name="twitter:image" content="https://cardforgep.github.io/assets/showcase/headphones-card.png" />
+
+  <title>CardForge — создание карточек товаров для Wildberries и Ozon с AI</title>
+  <link rel="stylesheet" href="./styles.css?v=8123" />
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebSite",
+        "@id": "https://cardforgep.github.io/#website",
+        "url": "https://cardforgep.github.io/",
+        "name": "CardForge",
+        "inLanguage": ["ru", "en", "de"]
+      },
+      {
+        "@type": "SoftwareApplication",
+        "@id": "https://cardforgep.github.io/#app",
+        "name": "CardForge",
+        "url": "https://cardforgep.github.io/",
+        "applicationCategory": "BusinessApplication",
+        "operatingSystem": "Web",
+        "description": "AI-сервис для создания карточек товаров для маркетплейсов и интернет-магазинов из фотографии товара.",
+        "featureList": [
+          "Создание карточек товаров из фотографии",
+          "Фон и рекламная композиция",
+          "Инфографика и текст на карточке",
+          "Форматы для маркетплейсов и социальных сетей"
+        ]
+      },
+      {
+        "@type": "FAQPage",
+        "@id": "https://cardforgep.github.io/#faq-schema",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "Можно ли создавать карточки товаров для Wildberries и Ozon?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Да. В CardForge можно создавать карточки товаров для маркетплейсов, включая Wildberries и Ozon, а также материалы для интернет-магазинов, рекламы и социальных сетей."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Нужно ли писать промпт?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Нет. Достаточно загрузить фотографию товара и выбрать стиль. Дополнительные пожелания можно указать при необходимости."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Можно ли добавить текст и преимущества на карточку?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Да. Пользователь может указать заголовок и реальные преимущества товара, а CardForge встроит их в дизайн карточки."
+            }
+          }
+        ]
+      }
+    ]
+  }
+  </script>
 </head>
 <body>
   <header class="topbar">
@@ -38,8 +117,8 @@
     <section class="hero shell">
       <div class="hero-copy">
         <span class="eyebrow">✦ AI для карточек товаров</span>
-        <h1>Одно фото товара —<br><em>и готова красивая продающая карточка</em></h1>
-        <p class="hero-lead">Загрузите фото любого предмета. CardForge сохранит сам товар и сделает профессиональную подачу для маркетплейса, рекламы или соцсетей.</p>
+        <h1>Одно фото товара —<br><em>и готова продающая карточка для маркетплейса</em></h1>
+        <p class="hero-lead">Загрузите обычное фото товара. CardForge сохранит сам товар и создаст профессиональную продающую карточку для Wildberries, Ozon, интернет-магазина, рекламы или соцсетей.</p>
         <div class="hero-actions">
           <a class="primary-btn" href="#generator">Попробовать бесплатно <span>→</span></a>
           <a class="text-link" href="#examples">Посмотреть результат</a>
@@ -169,6 +248,36 @@
       </div>
     </section>
 
+    <section class="seo-marketplaces shell" id="marketplaces">
+      <div class="section-heading centered">
+        <span class="eyebrow">Для маркетплейсов и интернет-магазинов</span>
+        <h2>Карточки товаров для Wildberries, Ozon и онлайн-продаж</h2>
+        <p>CardForge помогает превратить обычную фотографию товара в готовый визуал для каталога, карточки маркетплейса, рекламы и социальных сетей — без сложного редактора и ручной сборки дизайна.</p>
+      </div>
+      <div class="seo-use-cases">
+        <article>
+          <span class="seo-use-icon" aria-hidden="true">01</span>
+          <h3>Wildberries и Ozon</h3>
+          <p>Создавайте заметные карточки товаров с чистой композицией, заголовком и вашими реальными преимуществами товара.</p>
+        </article>
+        <article>
+          <span class="seo-use-icon" aria-hidden="true">02</span>
+          <h3>Интернет-магазины</h3>
+          <p>Получайте каталожные и lifestyle-изображения из одного исходного фото для магазина, лендинга или товарной подборки.</p>
+        </article>
+        <article>
+          <span class="seo-use-icon" aria-hidden="true">03</span>
+          <h3>Реклама и соцсети</h3>
+          <p>Готовьте квадратные, вертикальные и рекламные варианты товара для постов, сторис и продвижения.</p>
+        </article>
+      </div>
+      <div class="seo-copy-note">
+        <h3>AI-дизайн карточки товара без дизайнера</h3>
+        <p>Вы выбираете категорию и стиль, при необходимости добавляете заголовок и преимущества. CardForge меняет подачу — фон, свет, окружение и композицию — и старается сохранить форму, цвет, материал, логотип и видимые детали исходного товара.</p>
+        <a href="#generator">Создать карточку товара бесплатно <span>→</span></a>
+      </div>
+    </section>
+
     <section class="final-cta shell">
       <div><span class="eyebrow">Готовы попробовать?</span><h2>Никаких сложных настроек.<br><em>Просто загрузите фото.</em></h2><p>Первая генерация бесплатная.</p></div>
       <a class="primary-btn" href="#generator">Создать карточку <span>→</span></a>
@@ -177,6 +286,7 @@
     <section class="faq shell" id="faq">
       <div class="section-heading centered"><span class="eyebrow">FAQ</span><h2>Частые вопросы</h2></div>
       <div class="faq-list">
+        <details><summary>Можно ли создавать карточки товаров для Wildberries и Ozon?</summary><p>Да. CardForge подходит для создания карточек товаров для маркетплейсов, включая Wildberries и Ozon, а также для интернет-магазинов, рекламы и социальных сетей.</p></details>
         <details><summary>CardForge меняет сам товар?</summary><p>Нет. Сервис старается сохранить форму, пропорции, цвет, материал, логотип и видимые детали товара. Меняется подача: фон, свет, окружение и композиция.</p></details>
         <details><summary>Нужно писать промпт?</summary><p>Нет. Достаточно выбрать стиль. Пожелания можно добавить только если хочется точнее направить результат.</p></details>
         <details><summary>Можно добавить текст прямо на карточку?</summary><p>Да. Укажите заголовок и реальные преимущества товара — CardForge встроит их в дизайн и не будет придумывать характеристики за вас.</p></details>
@@ -297,8 +407,8 @@
   </div>
 
   <div id="siteToast" class="site-toast" hidden></div>
-  <script src="./config.js?v=8120"></script>
-  <script src="./i18n.js?v=8120"></script>
-  <script src="./app.js?v=8120"></script>
+  <script src="./config.js?v=8123"></script>
+  <script src="./i18n.js?v=8123"></script>
+  <script src="./app.js?v=8123"></script>
 </body>
 </html>

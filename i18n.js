@@ -75,6 +75,49 @@
   });
 
 
+  Object.assign(EN, {
+    'и готова продающая карточка для маркетплейса':'and a selling marketplace card is ready',
+    'Карточка товара из одного фото —':'A product card from one photo —',
+    'для маркетплейсов и онлайн-продаж':'for marketplaces and online sales',
+    'Загрузите обычное фото товара. CardForge сохранит сам товар и создаст профессиональную продающую карточку для Wildberries, Ozon, интернет-магазина, рекламы или соцсетей.':'Upload a regular product photo. CardForge keeps the product itself intact and creates a professional selling image for Amazon, Etsy, Shopify, online stores, ads or social media.',
+    'Для маркетплейсов и интернет-магазинов':'For marketplaces and online stores',
+    'Карточки товаров для Wildberries, Ozon и онлайн-продаж':'Product images for Amazon, Etsy, Shopify and online sales',
+    'CardForge помогает превратить обычную фотографию товара в готовый визуал для каталога, карточки маркетплейса, рекламы и социальных сетей — без сложного редактора и ручной сборки дизайна.':'CardForge turns a regular product photo into a ready visual for catalogs, marketplace listings, ads and social media — without a complex editor or manual design work.',
+    'Wildberries и Ozon':'Amazon, Etsy and Shopify',
+    'Создавайте заметные карточки товаров с чистой композицией, заголовком и вашими реальными преимуществами товара.':'Create eye-catching product listing images with a clean composition, headline and your real product benefits.',
+    'Интернет-магазины':'Online stores',
+    'Получайте каталожные и lifestyle-изображения из одного исходного фото для магазина, лендинга или товарной подборки.':'Create catalog and lifestyle images from one source photo for your store, landing page or product collection.',
+    'Реклама и соцсети':'Ads and social media',
+    'Готовьте квадратные, вертикальные и рекламные варианты товара для постов, сторис и продвижения.':'Prepare square, vertical and promotional product visuals for posts, stories and campaigns.',
+    'AI-дизайн карточки товара без дизайнера':'AI product-card design without a designer',
+    'Вы выбираете категорию и стиль, при необходимости добавляете заголовок и преимущества. CardForge меняет подачу — фон, свет, окружение и композицию — и старается сохранить форму, цвет, материал, логотип и видимые детали исходного товара.':'Choose a category and style, then optionally add a headline and benefits. CardForge changes the presentation — background, lighting, setting and composition — while aiming to preserve the original product’s shape, color, material, logo and visible details.',
+    'Создать карточку товара бесплатно':'Create a product card for free',
+    'Можно ли создавать карточки товаров для Wildberries и Ozon?':'Can I create product images for marketplaces?',
+    'Да. CardForge подходит для создания карточек товаров для маркетплейсов, включая Wildberries и Ozon, а также для интернет-магазинов, рекламы и социальных сетей.':'Yes. CardForge can create product listing images for marketplaces as well as online stores, ads and social media.'
+  });
+
+  Object.assign(DE, {
+    'и готова продающая карточка для маркетплейса':'und eine verkaufsstarke Marketplace-Karte ist fertig',
+    'Карточка товара из одного фото —':'Produktbild aus nur einem Foto —',
+    'для маркетплейсов и онлайн-продаж':'für Marktplätze und Online-Verkauf',
+    'Загрузите обычное фото товара. CardForge сохранит сам товар и создаст профессиональную продающую карточку для Wildberries, Ozon, интернет-магазина, рекламы или соцсетей.':'Lade ein normales Produktfoto hoch. CardForge erhält das Produkt selbst und erstellt ein professionelles Verkaufsbild für Amazon, Etsy, Onlineshops, Werbung oder Social Media.',
+    'Для маркетплейсов и интернет-магазинов':'Für Marktplätze und Onlineshops',
+    'Карточки товаров для Wildberries, Ozon и онлайн-продаж':'Produktbilder für Amazon, Etsy und den Online-Verkauf',
+    'CardForge помогает превратить обычную фотографию товара в готовый визуал для каталога, карточки маркетплейса, рекламы и социальных сетей — без сложного редактора и ручной сборки дизайна.':'CardForge verwandelt ein normales Produktfoto in ein fertiges Visual für Kataloge, Marketplace-Listings, Werbung und Social Media — ohne komplizierten Editor oder manuelle Designarbeit.',
+    'Wildberries и Ozon':'Amazon, Etsy und Marktplätze',
+    'Создавайте заметные карточки товаров с чистой композицией, заголовком и вашими реальными преимуществами товара.':'Erstelle auffällige Produktbilder mit klarer Komposition, Überschrift und deinen echten Produktvorteilen.',
+    'Интернет-магазины':'Onlineshops',
+    'Получайте каталожные и lifestyle-изображения из одного исходного фото для магазина, лендинга или товарной подборки.':'Erstelle Katalog- und Lifestyle-Bilder aus einem Ausgangsfoto für Shop, Landingpage oder Produktauswahl.',
+    'Реклама и соцсети':'Werbung und Social Media',
+    'Готовьте квадратные, вертикальные и рекламные варианты товара для постов, сторис и продвижения.':'Erstelle quadratische, vertikale und werbliche Produktvarianten für Posts, Stories und Kampagnen.',
+    'AI-дизайн карточки товара без дизайнера':'KI-Produktdesign ohne Designer',
+    'Вы выбираете категорию и стиль, при необходимости добавляете заголовок и преимущества. CardForge меняет подачу — фон, свет, окружение и композицию — и старается сохранить форму, цвет, материал, логотип и видимые детали исходного товара.':'Wähle Kategorie und Stil und ergänze bei Bedarf Überschrift und Vorteile. CardForge verändert die Präsentation — Hintergrund, Licht, Umgebung und Komposition — und versucht Form, Farbe, Material, Logo und sichtbare Details des Produkts zu erhalten.',
+    'Создать карточку товара бесплатно':'Produktbild kostenlos erstellen',
+    'Можно ли создавать карточки товаров для Wildberries и Ozon?':'Kann ich Produktbilder für Marktplätze erstellen?',
+    'Да. CardForge подходит для создания карточек товаров для маркетплейсов, включая Wildberries и Ozon, а также для интернет-магазинов, рекламы и социальных сетей.':'Ja. CardForge eignet sich für Produktbilder auf Marktplätzen sowie für Onlineshops, Werbung und Social Media.'
+  });
+
+
   const LEGAL = {
     en: {
       terms: `<h3>Terms of Service</h3>
@@ -161,14 +204,38 @@
 
   function apply(root=document.body) {
     document.documentElement.lang = current;
-    const titleRu = 'CardForge — фото товара в продающую карточку';
-    document.title = current === 'en' ? 'CardForge — product photo to selling card' : current === 'de' ? 'CardForge — Produktfoto zur Verkaufskarte' : titleRu;
-    const meta = document.querySelector('meta[name="description"]');
-    if (meta) meta.content = current === 'en'
-      ? 'CardForge turns an ordinary product photo into a polished product card for marketplaces, ads and social media.'
-      : current === 'de'
-        ? 'CardForge verwandelt ein gewöhnliches Produktfoto in eine hochwertige Produktkarte für Marktplätze, Werbung und Social Media.'
-        : 'CardForge превращает обычное фото товара в красивую продающую карточку для маркетплейсов, рекламы и соцсетей.';
+    const seoByLang = {
+      ru: {
+        title: 'CardForge — создание карточек товаров для Wildberries и Ozon с AI',
+        description: 'CardForge — AI-сервис для создания продающих карточек товаров для Wildberries, Ozon и интернет-магазинов. Загрузите фото и получите профессиональный визуал с фоном, инфографикой и текстом.',
+        ogTitle: 'CardForge — карточки товаров для маркетплейсов с AI',
+        ogDescription: 'Создавайте продающие карточки товаров для Wildberries, Ozon и интернет-магазинов из обычной фотографии.',
+        locale: 'ru_RU'
+      },
+      en: {
+        title: 'CardForge — AI product images for Amazon, Etsy and online stores',
+        description: 'Turn a regular product photo into a professional listing image for Amazon, Etsy, Shopify, ads and online stores with AI.',
+        ogTitle: 'CardForge — AI product images for ecommerce sellers',
+        ogDescription: 'Turn a basic product photo into a professional listing image for marketplaces and online stores.',
+        locale: 'en_US'
+      },
+      de: {
+        title: 'CardForge — KI-Produktbilder für Amazon, Etsy und Onlineshops',
+        description: 'Erstelle aus einem normalen Produktfoto professionelle Produktbilder für Amazon, Etsy, Onlineshops und Werbung mit KI.',
+        ogTitle: 'CardForge — KI-Produktbilder für Onlinehändler',
+        ogDescription: 'Aus einem normalen Produktfoto wird ein professionelles Verkaufsbild für Marktplätze und Onlineshops.',
+        locale: 'de_DE'
+      }
+    };
+    const seo = seoByLang[current] || seoByLang.ru;
+    document.title = seo.title;
+    const setMeta = (selector, value) => { const el = document.querySelector(selector); if (el) el.setAttribute('content', value); };
+    setMeta('meta[name="description"]', seo.description);
+    setMeta('meta[property="og:title"]', seo.ogTitle);
+    setMeta('meta[property="og:description"]', seo.ogDescription);
+    setMeta('meta[property="og:locale"]', seo.locale);
+    setMeta('meta[name="twitter:title"]', seo.ogTitle);
+    setMeta('meta[name="twitter:description"]', seo.ogDescription);
     const termsEl = document.getElementById('legalTerms');
     const privacyEl = document.getElementById('legalPrivacy');
     if (termsEl && privacyEl) {
